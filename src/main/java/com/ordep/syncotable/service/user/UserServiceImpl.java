@@ -8,6 +8,7 @@ import com.ordep.syncotable.repository.RoleRepository;
 import com.ordep.syncotable.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,17 +21,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void saveUser(UserDto dto) {
 
-        if (findUserByEmail(dto.email()) != null) throw new RuntimeException("já existe usuário com este email cadastrado");
-
         User user = userMapper.mapToEntity(dto);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
         Role role = roleRepository.findByName("ROLE_USER").orElseThrow(() -> new EntityNotFoundException("Role não encontrado"));
-
         user.setRoles(Set.of(role));
-
+        user.setActivated(true);
         userRepository.save(user);
 
     }
@@ -48,4 +48,5 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll().stream().map(userMapper::mapToDto).toList();
 
     }
+
 }
