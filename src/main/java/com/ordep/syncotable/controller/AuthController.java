@@ -17,12 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class AuthController {
 
     private final UserService userService;
-
-    @GetMapping("/index")
-    public String home() {
-        return "index";
-    }
-
+    
     @GetMapping("/login")
     public String loginForm() {
         return "login";
