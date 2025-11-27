@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
 <div th:replace="~{layout :: layout(~{::content})}">
     <div th:fragment="content">
-        <h1>Welcome to the Home Page!</h1>
+        <h1>Bem vindo ao projeto SyncoTable!</h1>
 
         <div sec:authorize="isAuthenticated()">
             <p>Logged in as: <span sec:authentication="name"></span></p>
