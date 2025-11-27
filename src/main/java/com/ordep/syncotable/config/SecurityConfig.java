@@ -24,9 +24,11 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) ->
-                        authorize.requestMatchers("/register/**").permitAll()
+                        authorize
+                                .requestMatchers("/").permitAll()
+                                .requestMatchers("/register/**").permitAll()
                                 .requestMatchers("/index").permitAll()
-                                .requestMatchers("/css/**", "/js/**").permitAll()
+                                .requestMatchers("/css/**", "/js/**", "/styles/**").permitAll()
                                 .requestMatchers("/h2-console/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 ).formLogin(form ->
