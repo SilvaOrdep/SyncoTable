@@ -4,16 +4,53 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
 <header th:insert="~{fragments/header :: header}"></header>
 <main>
-    <div class="container mt-4">
-        <h1>Bem vindo ao projeto SyncoTable!</h1>
-        <div sec:authorize="isAuthenticated()">
-            <p>Logged in as: <span sec:authentication="name"></span></p>
-            <p>Roles: <span sec:authentication="principal.authorities"></span></p>
+    <div sec:authorize="isAuthenticated()" class="container mt-4">
+        <div class="container d-flex justify-content-between mb-4">
+            <h2>Gerencie seus cards</h2>
+
+            <div>
+                <a href="#" class="btn btn-primary">+ Novo card</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 mb-3 mb-sm-0">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Funcionários</h5>
+                            <p class="card-text text-secondary">Card para registro dos funcionários</p>
+                            <p class="card-text text-secondary mb-0">Criado por: <span sec:authentication="name"></span>
+                            </p>
+                            <p class="card-text text-secondary">Em: 03/12/2025 14:42</p>
+                            <div>
+                                <a href="#" class="btn btn-primary">edit</a>
+                                <a href="#" class="btn btn-danger">delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 mb-3 mb-sm-0">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Funcionários</h5>
+                            <p class="card-text text-secondary">Card para registro dos funcionários</p>
+                            <p class="card-text text-secondary mb-0">Criado por: <span sec:authentication="name"></span>
+                            </p>
+                            <p class="card-text text-secondary">Em: 03/12/2025 14:42</p>
+                            <div>
+                                <a href="#" class="btn btn-primary">edit</a>
+                                <a href="#" class="btn btn-danger">delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </main>
