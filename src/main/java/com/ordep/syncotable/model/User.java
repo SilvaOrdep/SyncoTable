@@ -3,6 +3,7 @@ package com.ordep.syncotable.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -32,5 +33,7 @@ public class User {
     private Set<Role> roles;
     @lombok.Builder.Default
     private boolean activated = true;
+    @OneToMany(mappedBy = "lockedBy")
+    private List<Card> lockedCards;
 
 }
