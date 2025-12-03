@@ -18,8 +18,11 @@ public class CardColumn {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "card_id", nullable = false)
     private Card card;
+    @Column(name = "card_key")
     private String key;
+    @Column(name = "card_label")
     private String label;
+    @Column(name = "card_type")
     private String type;
     @Column(name = "order_index")
     private Integer orderIndex;

@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Entity
-@Table(name = "card_columns")
+@Table(name = "card_rows")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -32,6 +32,7 @@ public class CardRow {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
+    @lombok.Builder.Default
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
     @Column(name = "updated_at")

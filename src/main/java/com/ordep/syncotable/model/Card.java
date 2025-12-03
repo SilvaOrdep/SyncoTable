@@ -23,6 +23,7 @@ public class Card {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
+    @lombok.Builder.Default
     @Column(name = "created_at")
     private Instant createdAt = Instant.now();
     @ManyToOne
