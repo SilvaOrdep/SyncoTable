@@ -1,6 +1,6 @@
 package com.ordep.syncotable.mapper;
 
-import com.ordep.syncotable.dto.UserDto;
+import com.ordep.syncotable.dto.user.UserDto;
 import com.ordep.syncotable.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

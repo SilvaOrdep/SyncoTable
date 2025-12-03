@@ -1,6 +1,6 @@
 package com.ordep.syncotable.controller;
 
-import com.ordep.syncotable.dto.UserDto;
+import com.ordep.syncotable.dto.user.UserDto;
 import com.ordep.syncotable.model.User;
 import com.ordep.syncotable.service.user.UserService;
 import jakarta.validation.Valid;

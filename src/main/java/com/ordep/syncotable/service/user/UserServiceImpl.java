@@ -1,6 +1,6 @@
 package com.ordep.syncotable.service.user;
 
-import com.ordep.syncotable.dto.UserDto;
+import com.ordep.syncotable.dto.user.UserDto;
 import com.ordep.syncotable.mapper.UserMapper;
 import com.ordep.syncotable.model.Role;
 import com.ordep.syncotable.model.User;
