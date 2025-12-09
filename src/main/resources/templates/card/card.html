@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  lang="en"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Card</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <header th:insert="~{fragments/header :: header}"></header>
+
+    <main class="container my-4">
+      <div class="d-flex justify-content-between mb-3 align-items-center">
+        <h2 class="text-white" id="cardTitleHeading" th:text="${card.title()}">
+          Card
+        </h2>
+        <div class="d-flex gap-2">
+          <nav>
+            <button class="btn btn-light" id="btnAddRow">+ Linha</button>
+          </nav>
+          <select id="selectPerPage" class="form-select form-select-sm">
+            <option value="5">5 / página</option>
+            <option value="10" selected>10 / página</option>
+            <option value="25">25 / página</option>
+          </select>
+          <button class="btn btn-success" id="btnImportXLSX">
+            Importar
+          </button>
+          <input
+            type="file"
+            id="fileInputXLSX"
+            accept=".xlsx,.xls"
+            style="display: none"
+          />
+          <button class="btn btn-danger" id="btnDeleteSelected">
+            Deletar selecionados
+          </button>
+          <button class="btn btn-primary" id="btnExportCSV">
+            Exportar
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive glass p-3">
+        <table
+          class="table table-hover table-bordered align-middle text-white"
+          id="dataTable"
+        >
+          <thead>
+            <tr>
+              <th th:each="col : ${columns}" th:text="${col.label()}"></th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="row : ${rows}">
+              <td
+                th:each="col : ${columns}"
+                th:text="${row.values()[col.key()]}"
+              >
+                valor
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-light">Editar</button>
+                  <button class="btn btn-danger">Excluir</button>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(rows)}">
+              <td
+                th:colspan="${#lists.size(columns)+1}"
+                class="text-center text-muted"
+              >
+                Nenhum registro encontrado.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <nav>
+          <ul class="pagination" id="pagination"></ul>
+        </nav>
+      </div>
+    </main>
+  </body>
+</html>
