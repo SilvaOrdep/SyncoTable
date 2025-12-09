@@ -1,6 +1,6 @@
 package com.ordep.syncotable.model;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
@@ -24,7 +24,7 @@ public class CardRow {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "card_id")
     private Card card;
-    @Type(JsonBinaryType.class)
+    @Type(JsonType.class)
     @Column(name = "values_json", columnDefinition = "jsonb")
     private Map<String, Object> valuesJson = new HashMap<>();
     @Version
