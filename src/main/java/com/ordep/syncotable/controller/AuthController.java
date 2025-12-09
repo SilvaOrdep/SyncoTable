@@ -20,13 +20,13 @@ public class AuthController {
     
     @GetMapping("/login")
     public String loginForm() {
-        return "login";
+        return "auth/login";
     }
 
     @GetMapping("/register")
     public String registerForm(Model model) {
         model.addAttribute("user", new UserDto());
-        return "register";
+        return "auth/register";
     }
 
     @PostMapping("/register/save")
@@ -40,11 +40,11 @@ public class AuthController {
 
         if (result.hasErrors()) {
             model.addAttribute("user", dto);
-            return "register";
+            return "auth/register";
         }
 
         userService.saveUser(dto);
-        return "redirect:/login?success";
+        return "redirect:auth/login?success";
     }
 
 }
