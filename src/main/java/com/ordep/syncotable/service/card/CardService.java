@@ -13,6 +13,7 @@ import com.ordep.syncotable.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -43,6 +44,11 @@ public class CardService {
 
     public List<RowResponse> findCardRowsByCardId(Long id) {
         return rows.findByCard(cards.findById(id).orElse(null)).stream().map(rowMapper::toResponse).toList();
+    }
+
+    @Transactional
+    public void deleteCardById(Long id) {
+        cards.deleteById(id);
     }
 
 }

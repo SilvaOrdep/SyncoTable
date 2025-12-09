@@ -4,9 +4,7 @@ import com.ordep.syncotable.service.card.CardService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/card")
@@ -22,6 +20,13 @@ public class CardController {
         model.addAttribute("rows", cardService.findCardRowsByCardId(id));
 
         return "card/card";
+    }
+
+    @PostMapping("/{id}")
+    public String card(@PathVariable Long id) {
+        cardService.deleteCardById(id);
+
+        return "redirect:/home";
     }
 
 }

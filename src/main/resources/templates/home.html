@@ -17,11 +17,22 @@
       .card-clickable {
         cursor: pointer;
         transition: all 0.3s ease;
+        position: relative;
       }
 
       .card-clickable:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         transform: translateY(-2px);
+      }
+
+      .card-body {
+        cursor: pointer;
+      }
+
+      .card-footer button,
+      .card-footer form {
+        position: relative;
+        z-index: 10;
       }
     </style>
   </head>
@@ -39,9 +50,9 @@
         <div class="container">
           <div class="row">
             <div class="col-sm-6 mb-3 mb-sm-0" th:each="card: ${cards}">
-              <a
-                th:href="@{/card/{id}(id=${card.id()})}"
-                class="card card-clickable d-block text-decoration-none text-reset"
+              <div
+                class="card card-clickable"
+                th:onclick="|window.location.href='@{/card/{id}(id=${card.id()})}';|"
               >
                 <div class="card-body">
                   <h5 class="card-title" th:text="${card.title()}"></h5>
@@ -56,22 +67,30 @@
                     class="card-text text-secondary"
                     th:text="'Criado em: ' + ${card.createdAt().toString().substring(0,10)}"
                   ></p>
-                  <div class="mt-3 d-flex gap-2">
+                </div>
+                <div class="card-footer bg-transparent d-flex gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-primary card-action-edit"
+                    onclick="stopPropagation(); preventDefault();"
+                  >
+                    Editar
+                  </button>
+                  <form
+                    th:action="@{/card/{id}(id=${card.id()})}"
+                    th:method="delete"
+                    class="m-0"
+                    onclick="stopPropagation();"
+                  >
                     <button
-                      type="button"
-                      class="btn btn-sm btn-primary card-action-edit"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
+                      type="submit"
                       class="btn btn-sm btn-danger card-action-delete"
                     >
                       Deletar
                     </button>
-                  </div>
+                  </form>
                 </div>
-              </a>
+              </div>
             </div>
           </div>
         </div>

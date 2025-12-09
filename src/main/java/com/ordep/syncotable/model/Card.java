@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "cards")
@@ -31,5 +32,9 @@ public class Card {
     private User lockedBy;
     @Column(name = "locked_at")
     private Instant lockedAt;
+    @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CardColumn> columns;
+    @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CardRow> rows;
 
 }
