@@ -7,6 +7,8 @@ import com.ordep.syncotable.mapper.CardColumnMapper;
 import com.ordep.syncotable.mapper.CardMapper;
 import com.ordep.syncotable.mapper.CardRowMapper;
 import com.ordep.syncotable.model.Card;
+import com.ordep.syncotable.model.CardColumn;
+import com.ordep.syncotable.model.CardRow;
 import com.ordep.syncotable.model.User;
 import com.ordep.syncotable.repository.CardColumnRepository;
 import com.ordep.syncotable.repository.CardRepository;
@@ -17,6 +19,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -44,8 +47,32 @@ public class CardService {
         return columns.findByCard(cards.findById(id).orElse(null)).stream().map(columnMapper::toResponse).toList();
     }
 
-    public List<RowResponse> findCardRowsByCardId(Long id) {
-        return rows.findByCard(cards.findById(id).orElse(null)).stream().map(rowMapper::toResponse).toList();
+    public List<RowResponse> findCardRowsByCardId(Long id, String columnKey, String direction) {
+        List<CardRow> cardRowsResponse = new ArrayList<>();
+
+        if (columnKey == null || columnKey.isEmpty()) {
+            cardRowsResponse = rows.findByCard(cards.findById(id).orElse(null));
+        } else {
+            CardColumn cardColumn = columns.findByCardAndKey(cards.findById(id).orElseThrow(() -> new EntityNotFoundException("Card não encontrado")), columnKey).get();
+
+            if (direction == null || direction.isEmpty()) {
+                direction = "ASC";
+            }
+
+            switch (cardColumn.getType()) {
+                case "TEXT":
+                    cardRowsResponse = rows.findByCardIdOrderByJsonField(id, columnKey, direction);
+                    break;
+                case "NUMBER":
+                    cardRowsResponse = rows.findByCardIdOrderByJsonFieldNumeric(id, columnKey, direction);
+                    break;
+                case "DATE":
+                    cardRowsResponse = rows.findByCardIdOrderByJsonFieldDate(id, columnKey, direction);
+                    break;
+            }
+        }
+
+        return cardRowsResponse.stream().map(rowMapper::toResponse).toList();
     }
 
     @Transactional

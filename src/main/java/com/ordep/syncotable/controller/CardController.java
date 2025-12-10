@@ -15,10 +15,12 @@ public class CardController {
     private final CardService cardService;
 
     @GetMapping("/{id}")
-    public String card(Model model, @PathVariable Long id) {
+    public String card(Model model, @PathVariable Long id, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection) {
         model.addAttribute("card", cardService.findCardById(id));
         model.addAttribute("columns", cardService.findCardColumnsByCardId(id));
-        model.addAttribute("rows", cardService.findCardRowsByCardId(id));
+        model.addAttribute("rows", cardService.findCardRowsByCardId(id, sortBy, sortDirection));
+        model.addAttribute("sortBy", sortBy);
+        model.addAttribute("sortDirection", sortDirection);
 
         return "card/card";
     }
@@ -34,14 +36,14 @@ public class CardController {
     public String deleteRow(@PathVariable Long id, @PathVariable Long rowId) {
         cardService.deleteRow(rowId);
 
-        return "redirect:/card/"+id;
+        return "redirect:/card/" + id;
     }
 
     @PostMapping("/{id}/row/batch-delete")
     public String deleteRowsInBatch(@PathVariable Long id, @RequestBody BatchDeleteRowsRequest batchDeleteRowsRequest) {
         cardService.deleteRowsInBatch(batchDeleteRowsRequest.rowIds());
 
-        return "redirect:/card/"+id;
+        return "redirect:/card/" + id;
     }
 
 }
