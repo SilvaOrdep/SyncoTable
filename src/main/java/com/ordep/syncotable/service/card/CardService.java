@@ -14,11 +14,18 @@ import com.ordep.syncotable.repository.CardColumnRepository;
 import com.ordep.syncotable.repository.CardRepository;
 import com.ordep.syncotable.repository.CardRowRepository;
 import com.ordep.syncotable.repository.UserRepository;
+import com.ordep.syncotable.sheets.Spreadsheet;
+import com.ordep.syncotable.sheets.SpreadsheetFactory;
+import com.ordep.syncotable.sheets.impl.XlsxHandler;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +40,7 @@ public class CardService {
     private final CardColumnMapper columnMapper;
     private final CardRowRepository rows;
     private final CardRowMapper rowMapper;
+    private final SpreadsheetFactory spreadsheetFactory;
 
 
     public List<CardResponse> list() {
@@ -84,6 +92,27 @@ public class CardService {
         card.setCreatedBy(user);
         return cardMapper.toResponse(card);
     }
+
+    @Transactional
+    public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId) {
+
+        String filename = multipartFile.getOriginalFilename();
+        Spreadsheet sheet = spreadsheetFactory.getHandler(filename);
+        try (InputStream is = multipartFile.getInputStream()) {
+            List<CardRow> rows = sheet.read(is);
+            CardResponse card = createCard(filename, "", userId);
+            rows.forEach(row -> row.setCard(
+                    cards.findById(card.id())
+                            .orElseThrow(() -> new EntityNotFoundException("Card not found"))
+            ));
+
+            return card;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read spreadsheet", e);
+        }
+    }
+
 
     @Transactional
     public void deleteCardById(Long id) {
