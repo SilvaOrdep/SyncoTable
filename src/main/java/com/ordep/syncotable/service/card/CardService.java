@@ -58,11 +58,17 @@ public class CardService {
         return cardMapper.toResponse(card);
     }
 
-
-
     @Transactional
     public void deleteCardById(Long id) {
         cards.deleteById(id);
+    }
+
+    public void deleteRow(Long rowId) {
+        rows.deleteById(rowId);
+    }
+
+    public void deleteRowsInBatch(List<Long> rowsId) {
+        rows.deleteAllById(rowsId);
     }
 
 }
