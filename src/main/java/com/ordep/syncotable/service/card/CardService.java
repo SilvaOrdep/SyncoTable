@@ -2,6 +2,8 @@ package com.ordep.syncotable.service.card;
 
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.column.response.CardColumnResponse;
+import com.ordep.syncotable.dto.row.request.CreateRowRequest;
+import com.ordep.syncotable.dto.row.request.UpdateRowRequest;
 import com.ordep.syncotable.dto.row.response.RowResponse;
 import com.ordep.syncotable.mapper.CardColumnMapper;
 import com.ordep.syncotable.mapper.CardMapper;
@@ -16,16 +18,15 @@ import com.ordep.syncotable.repository.CardRowRepository;
 import com.ordep.syncotable.repository.UserRepository;
 import com.ordep.syncotable.sheets.Spreadsheet;
 import com.ordep.syncotable.sheets.SpreadsheetFactory;
-import com.ordep.syncotable.sheets.impl.XlsxHandler;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,21 +48,21 @@ public class CardService {
         return cards.findAll().stream().map(cardMapper::toResponse).toList();
     }
 
-    public CardResponse findCardById(Long id) {
-        return cards.findById(id).map(cardMapper::toResponse).orElseThrow(() -> new EntityNotFoundException("Card não encontrado"));
+    public CardResponse findCard(Long id) {
+        return cardMapper.toResponse(findCardById(id));
     }
 
     public List<CardColumnResponse> findCardColumnsByCardId(Long id) {
-        return columns.findByCard(cards.findById(id).orElse(null)).stream().map(columnMapper::toResponse).toList();
+        return columns.findByCard(findCardById(id)).stream().map(columnMapper::toResponse).toList();
     }
 
     public List<RowResponse> findCardRowsByCardId(Long id, String columnKey, String direction) {
         List<CardRow> cardRowsResponse = new ArrayList<>();
 
         if (columnKey == null || columnKey.isEmpty()) {
-            cardRowsResponse = rows.findByCard(cards.findById(id).orElse(null));
+            cardRowsResponse = rows.findByCard(findCardById(id));
         } else {
-            CardColumn cardColumn = columns.findByCardAndKey(cards.findById(id).orElseThrow(() -> new EntityNotFoundException("Card não encontrado")), columnKey).get();
+            CardColumn cardColumn = columns.findByCardAndKey(findCardById(id), columnKey).get();
 
             if (direction == null || direction.isEmpty()) {
                 direction = "ASC";
@@ -102,8 +103,7 @@ public class CardService {
             List<CardRow> rows = sheet.read(is);
             CardResponse card = createCard(filename, "", userId);
             rows.forEach(row -> row.setCard(
-                    cards.findById(card.id())
-                            .orElseThrow(() -> new EntityNotFoundException("Card not found"))
+                    findCardById(card.id())
             ));
 
             return card;
@@ -113,8 +113,35 @@ public class CardService {
         }
     }
 
+    public RowResponse createRow(CreateRowRequest createRowRequest) {
+        Card card = findCardById(createRowRequest.cardId());
+        User user = users.findById(createRowRequest.userId()).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-    @Transactional
+        CardRow row = CardRow.builder()
+                .status("ACTIVE")
+                .card(card)
+                .createdBy(user)
+                .valuesJson(createRowRequest.values())
+                .version(0L)
+                .updatedAt(Instant.now())
+                .build();
+
+        return rowMapper.toResponse(rows.save(row));
+    }
+
+    public RowResponse updateRow(UpdateRowRequest updateRowRequest) {
+        CardRow cardRow = rows.findById(updateRowRequest.rowId()).orElseThrow(() -> new EntityNotFoundException("Linha não encontrada"));
+
+        if (!cardRow.getVersion().equals(updateRowRequest.version())) throw new RuntimeException("Erro de incompatibilidade de versões da linha atual");
+
+        for (String key : cardRow.getValuesJson().keySet()) {
+            cardRow.getValuesJson().put(key, updateRowRequest.values().get(key));
+        }
+        cardRow.setUpdatedAt(Instant.now());
+
+        return rowMapper.toResponse(rows.save(cardRow));
+    }
+
     public void deleteCardById(Long id) {
         cards.deleteById(id);
     }
@@ -125,6 +152,11 @@ public class CardService {
 
     public void deleteRowsInBatch(List<Long> rowsId) {
         rows.deleteAllById(rowsId);
+    }
+
+    private Card findCardById(Long id) {
+        return cards.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
     }
 
 }
