@@ -1,11 +1,14 @@
 package com.ordep.syncotable.controller;
 
+import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.row.request.BatchDeleteRowsRequest;
 import com.ordep.syncotable.service.card.CardService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/card")
@@ -46,4 +49,11 @@ public class CardController {
         return "redirect:/card/" + id;
     }
 
+    @PostMapping(value= "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String importCard(@RequestParam("file") MultipartFile multipartFile, @RequestParam(required = true) Long userId) {
+        CardResponse card = cardService.importSpreadsheet(multipartFile, userId);
+
+        return "redirect:/card/" + card.id();
+    }
 }
+
