@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -94,19 +95,30 @@ public class CardService {
         card.setTitle(title);
         card.setDescription(description);
         card.setCreatedBy(user);
-        return cardMapper.toResponse(card);
+        return cardMapper.toResponse(cards.save(card));
     }
+
+    //Problema no createColumn
+//    @Transactional
+//    public CardResponse createColumn(Card card, CardRow cardRow){
+//        CardColumn column = new CardColumn();
+//        column.setCard(card);
+//
+//        column.setKey();
+//        columns.save(column);
+//        return null;
+//    }
 
     @Transactional
     public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId) {
-
+        //ver se é melhor criar as colunas direto daqui ou se seria uma boa fazer cada coluna dentro do handler
         String filename = multipartFile.getOriginalFilename();
         Spreadsheet sheet = spreadsheetFactory.getHandler(filename);
         try (InputStream is = multipartFile.getInputStream()) {
-            List<CardRow> rows = sheet.read(is);
+            List<CardRow> cardRows = sheet.read(is);
             CardResponse card = createCard(filename, "", userId);
-            rows.forEach(row -> row.setCard(findCardById(card.id())));
-
+            cardRows.forEach(row -> row.setCard(findCardById(card.id())));
+            rows.saveAll(cardRows);
             return card;
 
         } catch (IOException e) {
