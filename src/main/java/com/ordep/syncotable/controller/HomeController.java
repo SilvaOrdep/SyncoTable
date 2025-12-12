@@ -1,6 +1,7 @@
 package com.ordep.syncotable.controller;
 
 import com.ordep.syncotable.service.card.CardService;
+import com.ordep.syncotable.service.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
 
     private final CardService cardService;
+    private final UserService userService;
 
     @GetMapping("/")
     public String root(Authentication authentication) {
@@ -23,9 +25,10 @@ public class HomeController {
     }
 
     @GetMapping("/home")
-    public String home(Model model) {
+    public String home(Model model, Authentication authentication) {
         model.addAttribute("title", "Home");
         model.addAttribute("cards", cardService.list());
+        model.addAttribute("userId", userService.findUserByEmail(authentication.getName()).getId());
         return "home";
     }
 
