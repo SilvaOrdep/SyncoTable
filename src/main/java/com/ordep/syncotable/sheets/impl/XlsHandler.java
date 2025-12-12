@@ -16,13 +16,14 @@ import java.util.*;
 
 public class XlsHandler implements Spreadsheet {
 
-    //Quando terminar as outras vou ver como posso separar essa função
     public List<CardRow> read(InputStream file) {
         List<CardRow> cardRows = new ArrayList<>();
 
         try (Workbook workbook = new HSSFWorkbook(file)) {
             Sheet sheet = workbook.getSheetAt(0);
             List<Row> rows = (List<Row>) toList(sheet.iterator());
+            Map<String, Object> cellValues = new HashMap<>();
+            Row header = rows.get(0);
             rows.remove(0);
             int index = 1;
             for (Row row : rows) {
@@ -30,30 +31,27 @@ public class XlsHandler implements Spreadsheet {
                 for (Cell cell : row) {
                     switch (cell.getCellType()) {
                         case STRING:
-                            values.add(cell.getStringCellValue());
+                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getStringCellValue());
                             break;
                         case NUMERIC:
-                            values.add(cell.getNumericCellValue());
+                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getNumericCellValue());
                             break;
                         case BOOLEAN:
-                            values.add(cell.getBooleanCellValue());
+                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getBooleanCellValue());
                             break;
                         case FORMULA:
-                            values.add(cell.getCellFormula());
+                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(),cell.getCellFormula());
                             break;
                         default:
-                            values.add(null);
+                            cellValues.put(null,null);
                     }
                 }
 
                 CardRow cardRow = new CardRow();
-                Map<String, Object> cellValues = new HashMap<>();
-
-                cellValues.put("Linha " + index, values);
                 cardRow.setValuesJson(cellValues);
 
                 cardRows.add(cardRow);
-
+                System.out.println(cardRow.getValuesJson().entrySet());
                 index++;
             }
 
