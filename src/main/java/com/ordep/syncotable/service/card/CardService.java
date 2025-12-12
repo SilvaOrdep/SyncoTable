@@ -27,8 +27,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -102,9 +105,7 @@ public class CardService {
         try (InputStream is = multipartFile.getInputStream()) {
             List<CardRow> rows = sheet.read(is);
             CardResponse card = createCard(filename, "", userId);
-            rows.forEach(row -> row.setCard(
-                    findCardById(card.id())
-            ));
+            rows.forEach(row -> row.setCard(findCardById(card.id())));
 
             return card;
 
@@ -117,14 +118,7 @@ public class CardService {
         Card card = findCardById(createRowRequest.cardId());
         User user = users.findById(createRowRequest.userId()).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        CardRow row = CardRow.builder()
-                .status("ACTIVE")
-                .card(card)
-                .createdBy(user)
-                .valuesJson(createRowRequest.values())
-                .version(0L)
-                .updatedAt(Instant.now())
-                .build();
+        CardRow row = CardRow.builder().status("ACTIVE").card(card).createdBy(user).valuesJson(createRowRequest.values()).version(0L).updatedAt(Instant.now()).build();
 
         return rowMapper.toResponse(rows.save(row));
     }
@@ -132,13 +126,13 @@ public class CardService {
     public RowResponse updateRow(UpdateRowRequest updateRowRequest) {
         CardRow cardRow = rows.findById(updateRowRequest.rowId()).orElseThrow(() -> new EntityNotFoundException("Linha não encontrada"));
 
-        if (!cardRow.getVersion().equals(updateRowRequest.version())) throw new RuntimeException("Erro de incompatibilidade de versões da linha atual");
+        if (!cardRow.getVersion().equals(updateRowRequest.version()))
+            throw new RuntimeException("Erro de incompatibilidade de versões da linha atual");
 
-        for (String key : cardRow.getValuesJson().keySet()) {
-            cardRow.getValuesJson().put(key, updateRowRequest.values().get(key));
-        }
+        validateAndUpdateValues(cardRow, updateRowRequest.values());
+
         cardRow.setUpdatedAt(Instant.now());
-
+        cardRow.setVersion(cardRow.getVersion() + 1);
         return rowMapper.toResponse(rows.save(cardRow));
     }
 
@@ -155,8 +149,45 @@ public class CardService {
     }
 
     private Card findCardById(Long id) {
-        return cards.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
+        return cards.findById(id).orElseThrow(() -> new EntityNotFoundException("Card not found"));
+    }
+
+    private void validateAndUpdateValues(CardRow row, Map<String, Object> newValues) {
+        var cardColumnMap = columns.findByCard(row.getCard()).stream().collect(Collectors.toMap(CardColumn::getKey, col -> col));
+
+        for (String key : row.getValuesJson().keySet()) {
+
+            Object newValue = newValues.get(key);
+
+            if (newValue == null || newValue.toString().isEmpty()) {
+                continue;
+            }
+
+            CardColumn col = cardColumnMap.get(key);
+            if (col != null) {
+                try {
+                    Object validatedValue = validateType(newValue, col.getType());
+                    row.getValuesJson().put(key, validatedValue);
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(String.format("Campo '%s' inválido: %s", col.getLabel(), e.getMessage()));
+                }
+            }
+
+        }
+    }
+
+    private Object validateType(Object value, String type) {
+        try {
+            return switch (type) {
+                case "NUMERIC" -> value = Double.parseDouble(value.toString());
+                case "DATE" -> value = LocalDate.parse(value.toString());
+                case "TEXT" -> value = value.toString();
+                default -> value;
+            };
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Valor inválido para tipo: " + type);
+        }
+
     }
 
 }
