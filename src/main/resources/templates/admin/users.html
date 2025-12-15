@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  lang="en"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Usuários</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <header th:insert="~{fragments/header :: header}"></header>
+
+    <main class="container my-4" sec:authorize="hasRole('ADMIN')">
+      <div class="d-flex justify-content-between mb-3 align-items-center">
+        <h3>Gestão de usuários</h3>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success" id="btnCreateUser">+ Usuário</button>
+        </div>
+      </div>
+
+      <div class="table-responsive glass p-3">
+        <table class="table table-hover table-bordered align-middle text-white">
+          <thead class="table-dark">
+            <tr>
+              <th style="width: 40px">
+                <input
+                  type="checkbox"
+                  id="checkboxSelectAll"
+                  class="form-check-input"
+                />
+              </th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th style="width: 140px">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              th:each="u : ${users}"
+              th:data-user-id="${u.id}"
+              th:data-username="${u.username}"
+              th:data-email="${u.email}"
+              th:data-role="${u.role}"
+              th:data-active="${u.active}"
+            >
+              <td>
+                <input
+                  type="checkbox"
+                  class="form-check-input checkbox-row"
+                  th:value="${u.id}"
+                />
+              </td>
+              <td th:text="${u.username}">username</td>
+              <td th:text="${u.email}">email</td>
+              <td th:text="${u.role}">ROLE_USER</td>
+              <td>
+                <span
+                  class="badge"
+                  th:classappend="${u.active} ? 'bg-success' : 'bg-secondary'"
+                  th:text="${u.active} ? 'Ativo' : 'Inativo'"
+                ></span>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-edit"
+                    th:attr="data-user-id=${u.id}"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-delete"
+                    th:attr="data-user-id=${u.id}"
+                  >
+                    Deletar
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(users)}">
+              <td colspan="6" class="text-center text-muted">
+                Nenhum usuário cadastrado.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="userModalTitle">Novo Usuário</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="userForm">
+              <input type="hidden" id="userId" />
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input class="form-control" id="username" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" required />
+              </div>
+              <div class="mb-3" id="passwordGroup">
+                <label class="form-label">Senha</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  minlength="3"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select class="form-select" id="role">
+                  <option value="ROLE_USER">ROLE_USER</option>
+                  <option value="ROLE_ADMIN">ROLE_ADMIN</option>
+                </select>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="active"
+                  checked
+                />
+                <label class="form-check-label">Ativo</label>
+              </div>
+            </form>
+            <div id="formErrors" class="text-danger small"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" id="btnSaveUser">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      const userModal = new bootstrap.Modal(
+        document.getElementById("userModal")
+      );
+      const form = document.getElementById("userForm");
+      const formErrors = document.getElementById("formErrors");
+      const passwordGroup = document.getElementById("passwordGroup");
+
+      const fields = {
+        id: document.getElementById("userId"),
+        username: document.getElementById("username"),
+        email: document.getElementById("email"),
+        password: document.getElementById("password"),
+        role: document.getElementById("role"),
+        active: document.getElementById("active"),
+      };
+
+      const selectAllCheckbox = document.getElementById("checkboxSelectAll");
+      const rowCheckboxes = document.querySelectorAll(".checkbox-row");
+
+      selectAllCheckbox.addEventListener("change", (e) => {
+        rowCheckboxes.forEach((cb) => (cb.checked = e.target.checked));
+      });
+
+      document.getElementById("btnCreateUser").addEventListener("click", () => {
+        document.getElementById("userModalTitle").textContent = "Novo Usuário";
+        form.reset();
+        fields.id.value = "";
+        passwordGroup.style.display = "";
+        formErrors.textContent = "";
+        userModal.show();
+      });
+
+      document.querySelectorAll(".btn-edit").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const row = e.target.closest("tr");
+          const id = row.getAttribute("data-user-id");
+          const username = row.getAttribute("data-username");
+          const email = row.getAttribute("data-email");
+          const role = row.getAttribute("data-role");
+          const isActive = row.getAttribute("data-active") === "true";
+
+          document.getElementById("userModalTitle").textContent =
+            "Editar Usuário";
+          fields.id.value = id;
+          fields.username.value = username;
+          fields.email.value = email;
+          fields.role.value = role;
+          fields.active.checked = isActive;
+          fields.password.value = "";
+          passwordGroup.style.display = "none";
+          formErrors.textContent = "";
+          userModal.show();
+        });
+      });
+
+      document.querySelectorAll(".btn-delete").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = e.target.getAttribute("data-user-id");
+          if (!confirm("Deseja excluir este usuário?")) return;
+
+          fetch(`/admin/users/delete/${id}`, { method: "POST" })
+            .then((r) => {
+              if (r.ok) location.reload();
+              else r.text().then((t) => alert(t || "Erro ao excluir"));
+            })
+            .catch(() => alert("Erro ao excluir"));
+        });
+      });
+
+      document.getElementById("btnSaveUser").addEventListener("click", () => {
+        formErrors.textContent = "";
+
+        const payloadCreate = {
+          username: fields.username.value.trim(),
+          email: fields.email.value.trim(),
+          password: fields.password.value.trim(),
+          role: fields.role.value,
+        };
+
+        const payloadUpdate = {
+          username: fields.username.value.trim(),
+          email: fields.email.value.trim(),
+          role: fields.role.value,
+          active: fields.active.checked,
+        };
+
+        const isEdit = !!fields.id.value;
+
+        if (!isEdit) {
+          fetch("/admin/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadCreate),
+          })
+            .then((r) => {
+              if (r.ok) location.reload();
+              else
+                r.json()
+                  .then(showErrors)
+                  .catch(() => showTextError());
+            })
+            .catch(networkError);
+        } else {
+          fetch(`/admin/users/${fields.id.value}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadUpdate),
+          })
+            .then((r) => {
+              if (r.ok) location.reload();
+              else
+                r.json()
+                  .then(showErrors)
+                  .catch(() => showTextError());
+            })
+            .catch(networkError);
+        }
+      });
+
+      function showErrors(err) {
+        if (Array.isArray(err?.errors)) {
+          formErrors.textContent = err.errors
+            .map((e) => `${e.field}: ${e.message}`)
+            .join(" | ");
+        } else if (err?.message) {
+          formErrors.textContent = err.message;
+        } else {
+          formErrors.textContent = "Erro de validação";
+        }
+      }
+      function showTextError(text) {
+        formErrors.textContent = text || "Erro";
+      }
+      function networkError() {
+        formErrors.textContent = "Erro de rede";
+      }
+    </script>
+  </body>
+</html>

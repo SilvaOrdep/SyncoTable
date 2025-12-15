@@ -21,5 +21,7 @@ public class UserDto {
     String email;
     @NotEmpty(message = "campo de senha não pode ser vazio")
     String password;
+    @NotEmpty(message = "Role inválido")
+    String role;
 
 }
