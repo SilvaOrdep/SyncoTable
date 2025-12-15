@@ -24,14 +24,16 @@ public class XlsxHandler implements Spreadsheet {
             Sheet sheet = workbook.getSheetAt(0);
 
             Iterator<Row> iterator = sheet.iterator();
+            Row header = iterator.next();
             if (iterator.hasNext()) iterator.next();
 
             int rowIndex = 1;
+            Map<String, Object> rowValues = new HashMap<>();
+
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
                 List<Object> values = new ArrayList<>();
-                Map<String, Object> rowValues = new HashMap<>();
                 CardRow cardRow = new CardRow();
 
                 for (int col = 0; col < row.getLastCellNum(); col++) {
@@ -39,23 +41,22 @@ public class XlsxHandler implements Spreadsheet {
 
                     switch (cell.getCellType()) {
                         case STRING:
-                            values.add(cell.getStringCellValue());
+                            rowValues.put(header.getCell(col).getStringCellValue() , cell.getStringCellValue());
                             break;
                         case NUMERIC:
-                            values.add(cell.getNumericCellValue());
+                            rowValues.put(header.getCell(col).getStringCellValue() ,cell.getNumericCellValue());
                             break;
                         case BOOLEAN:
-                            values.add(cell.getBooleanCellValue());
+                            rowValues.put(header.getCell(col).getStringCellValue() ,cell.getBooleanCellValue());
                             break;
                         case FORMULA:
-                            values.add(cell.getCellFormula());
+                            rowValues.put(header.getCell(col).getStringCellValue() ,cell.getCellFormula());
                             break;
                         default:
-                            values.add(null);
+                            rowValues.put(null ,null);
                     }
                 }
 
-                rowValues.put("Linha " + rowIndex, values);
                 cardRow.setValuesJson(rowValues);
                 lines.add(cardRow);
 
