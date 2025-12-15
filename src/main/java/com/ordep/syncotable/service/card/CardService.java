@@ -28,10 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,6 +43,7 @@ public class CardService {
     private final CardRowRepository rows;
     private final CardRowMapper rowMapper;
     private final SpreadsheetFactory spreadsheetFactory;
+    private final CardColumnMapper cardColumnMapper;
 
 
     public List<CardResponse> list() {
@@ -98,28 +96,34 @@ public class CardService {
         return cardMapper.toResponse(cards.save(card));
     }
 
-    //Problema no createColumn
-//    @Transactional
-//    public CardResponse createColumn(Card card, CardRow cardRow){
-//        CardColumn column = new CardColumn();
-//        column.setCard(card);
-//
-//        column.setKey();
-//        columns.save(column);
-//        return null;
-//    }
+    //Problema no createColumn'
+    //tambem falta criar os outros atributos
+    @Transactional
+    public CardColumnResponse createColumn(Card card, String key){
+        CardColumn column = new CardColumn();
+        column.setCard(card);
+        column.setLabel(key.toUpperCase(Locale.ROOT));
+        column.setKey(key);
+        return cardColumnMapper.toResponse(columns.save(column));
+    }
 
+    //percebi que a ordem está errada, precisa manter aquela ordem que veio na planilha
+    //usar LinkedHashMap ao inves de map comum
     @Transactional
     public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId) {
-        //ver se é melhor criar as colunas direto daqui ou se seria uma boa fazer cada coluna dentro do handler
         String filename = multipartFile.getOriginalFilename();
         Spreadsheet sheet = spreadsheetFactory.getHandler(filename);
         try (InputStream is = multipartFile.getInputStream()) {
             List<CardRow> cardRows = sheet.read(is);
-            CardResponse card = createCard(filename, "", userId);
-            cardRows.forEach(row -> row.setCard(findCardById(card.id())));
+            CardResponse cardResponse = createCard(filename, "", userId);
+            Card card = findCardById(cardResponse.id());
+            Map<String,Object> headers = cardRows.get(0).getValuesJson();
+            for (String key : headers.keySet()) {
+                createColumn(card, key);
+            }
+            cardRows.forEach(row -> row.setCard(card));
             rows.saveAll(cardRows);
-            return card;
+            return cardResponse;
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to read spreadsheet", e);
