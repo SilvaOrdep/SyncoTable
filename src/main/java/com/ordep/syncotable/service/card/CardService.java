@@ -96,19 +96,15 @@ public class CardService {
         return cardMapper.toResponse(cards.save(card));
     }
 
-    //Problema no createColumn'
-    //tambem falta criar os outros atributos
     @Transactional
-    public CardColumnResponse createColumn(Card card, String key){
+    public void createColumn(Card card, String key){
         CardColumn column = new CardColumn();
         column.setCard(card);
         column.setLabel(key.toUpperCase(Locale.ROOT));
         column.setKey(key);
-        return cardColumnMapper.toResponse(columns.save(column));
+        columns.save(column);
     }
 
-    //percebi que a ordem está errada, precisa manter aquela ordem que veio na planilha
-    //usar LinkedHashMap ao inves de map comum
     @Transactional
     public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId) {
         String filename = multipartFile.getOriginalFilename();
