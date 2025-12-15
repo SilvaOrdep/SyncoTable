@@ -4,10 +4,7 @@ import com.ordep.syncotable.model.CardRow;
 import com.ordep.syncotable.sheets.Spreadsheet;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,12 +19,10 @@ public class XlsHandler implements Spreadsheet {
         try (Workbook workbook = new HSSFWorkbook(file)) {
             Sheet sheet = workbook.getSheetAt(0);
             List<Row> rows = (List<Row>) toList(sheet.iterator());
-            Map<String, Object> cellValues = new HashMap<>();
             Row header = rows.get(0);
             rows.remove(0);
-            int index = 1;
             for (Row row : rows) {
-                List<Object> values = new ArrayList<>();
+                Map<String, Object> cellValues = new LinkedHashMap<>();
                 for (Cell cell : row) {
                     switch (cell.getCellType()) {
                         case STRING:
@@ -40,10 +35,13 @@ public class XlsHandler implements Spreadsheet {
                             cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getBooleanCellValue());
                             break;
                         case FORMULA:
-                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(),cell.getCellFormula());
+                            if (cell.getCellType().equals(CellType.NUMERIC)) {
+                                cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getStringCellValue());
+                            }
+                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getNumericCellValue());
                             break;
                         default:
-                            cellValues.put(null,null);
+                            cellValues.put("","");
                     }
                 }
 
@@ -52,7 +50,6 @@ public class XlsHandler implements Spreadsheet {
 
                 cardRows.add(cardRow);
                 System.out.println(cardRow.getValuesJson().entrySet());
-                index++;
             }
 
         } catch (IOException e) {
