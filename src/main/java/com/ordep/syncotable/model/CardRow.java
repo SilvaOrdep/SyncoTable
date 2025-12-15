@@ -7,6 +7,7 @@ import org.hibernate.annotations.Type;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Entity
@@ -26,7 +27,7 @@ public class CardRow {
     private Card card;
     @Type(JsonType.class)
     @Column(name = "values_json", columnDefinition = "jsonb")
-    private Map<String, Object> valuesJson = new HashMap<>();
+    private Map<String, Object> valuesJson = new LinkedHashMap<>();
     @Version
     private Long version;
     @ManyToOne(fetch = FetchType.LAZY)
