@@ -8,14 +8,8 @@ import com.ordep.syncotable.dto.row.response.RowResponse;
 import com.ordep.syncotable.mapper.CardColumnMapper;
 import com.ordep.syncotable.mapper.CardMapper;
 import com.ordep.syncotable.mapper.CardRowMapper;
-import com.ordep.syncotable.model.Card;
-import com.ordep.syncotable.model.CardColumn;
-import com.ordep.syncotable.model.CardRow;
-import com.ordep.syncotable.model.User;
-import com.ordep.syncotable.repository.CardColumnRepository;
-import com.ordep.syncotable.repository.CardRepository;
-import com.ordep.syncotable.repository.CardRowRepository;
-import com.ordep.syncotable.repository.UserRepository;
+import com.ordep.syncotable.model.*;
+import com.ordep.syncotable.repository.*;
 import com.ordep.syncotable.sheets.Spreadsheet;
 import com.ordep.syncotable.sheets.SpreadsheetFactory;
 import jakarta.persistence.EntityNotFoundException;
@@ -44,9 +38,10 @@ public class CardService {
     private final CardRowMapper rowMapper;
     private final SpreadsheetFactory spreadsheetFactory;
     private final CardColumnMapper cardColumnMapper;
+    private final PermissionRepository permissions;
+    private final RoleRepository roles;
 
-
-    public List<CardResponse> list() {
+    public List<CardResponse> findAllCards() {
         return cards.findAll().stream().map(cardMapper::toResponse).toList();
     }
 
@@ -148,7 +143,10 @@ public class CardService {
         return rowMapper.toResponse(rows.save(cardRow));
     }
 
+    @Transactional
     public void deleteCardById(Long id) {
+        permissions.deleteByCard_Id(id);
+
         cards.deleteById(id);
     }
 
@@ -158,6 +156,19 @@ public class CardService {
 
     public void deleteRowsInBatch(List<Long> rowsId) {
         rows.deleteAllById(rowsId);
+    }
+
+    public List<CardResponse> getAccessibleCardsByUser(User user) {
+        Role role = roles.findByName("ROLE_ADMIN").orElseThrow(() -> new EntityNotFoundException("Role não encontrado"));
+        if (user.getRoles().contains(role)) {
+            return cards.findAll().stream().map(cardMapper::toResponse).collect(Collectors.toList());
+        }
+
+        return permissions.findByUser(user).stream()
+                .filter(Permission::isCanView)
+                .map(Permission::getCard)
+                .map(cardMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     private Card findCardById(Long id) {

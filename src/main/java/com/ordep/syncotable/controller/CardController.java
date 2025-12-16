@@ -25,6 +25,8 @@ public class CardController {
 
     @GetMapping("/{id}")
     public String card(Authentication authentication, Model model, @PathVariable Long id, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection) {
+        long count = cardService.getAccessibleCardsByUser(userService.findUserByEmail(authentication.getName())).stream().filter(c -> c.id().equals(id)).count();
+        if (count == 0) return "redirect:/home";
         model.addAttribute("card", cardService.findCard(id));
         model.addAttribute("columns", cardService.findCardColumnsByCardId(id));
         model.addAttribute("rows", cardService.findCardRowsByCardId(id, sortBy, sortDirection));

@@ -14,6 +14,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface CardMapper {
 
     @Mapping(target = "lockedBy", source = "lockedBy.username")
+    @Mapping(target = "createdBy", source = "createdBy.username")
     CardResponse toResponse(Card card);
 
     CardSummaryResponse toSummaryResponse(Card card);

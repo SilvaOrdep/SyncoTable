@@ -1,6 +1,7 @@
 package com.ordep.syncotable.mapper;
 
 import com.ordep.syncotable.dto.permission.request.PermissionUpdateRequest;
+import com.ordep.syncotable.dto.permission.response.PermissionMatrixResponse;
 import com.ordep.syncotable.model.Permission;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,5 +20,10 @@ public interface PermissionMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "card", ignore = true)
     void updateEntity(PermissionUpdateRequest request, @MappingTarget Permission permission);
+
+    @Mapping(source = "permission.user.id", target = "userId")
+    @Mapping(source = "permission.card.id", target = "cardId")
+    @Mapping(target = "columnOverrides", ignore = true)
+    PermissionMatrixResponse toMatrixResponse(Permission permission);
 
 }
