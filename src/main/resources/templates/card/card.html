@@ -222,9 +222,114 @@
           .querySelector("[data-card-id]")
           .getAttribute("data-sort-direction") || "ASC";
 
+      let paginationState = {
+        currentPage: 1,
+        perPage: 10,
+        totalRows: 0,
+      };
+
       const checkboxes = document.querySelectorAll(".checkbox-row");
       const selectAllCheckbox = document.getElementById("checkboxSelectAll");
       const btnDeleteSelected = document.getElementById("btnDeleteSelected");
+      const selectPerPage = document.getElementById("selectPerPage");
+      const paginationContainer = document.getElementById("pagination");
+
+      function initPagination() {
+        const totalRows = document.querySelectorAll(
+          "tbody tr:not(:has(td:only-child))"
+        ).length;
+        paginationState.totalRows = totalRows;
+        paginationState.currentPage = 1;
+        renderPagination();
+      }
+
+      function renderPagination() {
+        paginationContainer.innerHTML = "";
+        const totalPages = Math.ceil(
+          paginationState.totalRows / paginationState.perPage
+        );
+
+        if (totalPages <= 1) return;
+
+        const prevLi = document.createElement("li");
+        prevLi.className = `page-item ${
+          paginationState.currentPage === 1 ? "disabled" : ""
+        }`;
+        prevLi.innerHTML = `<a class="page-link" href="#" ${
+          paginationState.currentPage === 1
+            ? "tabindex='-1' aria-disabled='true'"
+            : ""
+        }>Anterior</a>`;
+        prevLi.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (paginationState.currentPage > 1) {
+            paginationState.currentPage--;
+            updateTableDisplay();
+            renderPagination();
+          }
+        });
+        paginationContainer.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+          const li = document.createElement("li");
+          li.className = `page-item ${
+            i === paginationState.currentPage ? "active" : ""
+          }`;
+          li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+          li.addEventListener("click", (e) => {
+            e.preventDefault();
+            paginationState.currentPage = i;
+            updateTableDisplay();
+            renderPagination();
+          });
+          paginationContainer.appendChild(li);
+        }
+
+        const nextLi = document.createElement("li");
+        nextLi.className = `page-item ${
+          paginationState.currentPage === totalPages ? "disabled" : ""
+        }`;
+        nextLi.innerHTML = `<a class="page-link" href="#" ${
+          paginationState.currentPage === totalPages
+            ? "tabindex='-1' aria-disabled='true'"
+            : ""
+        }>Próximo</a>`;
+        nextLi.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (paginationState.currentPage < totalPages) {
+            paginationState.currentPage++;
+            updateTableDisplay();
+            renderPagination();
+          }
+        });
+        paginationContainer.appendChild(nextLi);
+      }
+
+      function updateTableDisplay() {
+        const rows = Array.from(
+          document.querySelectorAll("tbody tr:not(:has(td:only-child))")
+        );
+        const start =
+          (paginationState.currentPage - 1) * paginationState.perPage;
+        const end = start + paginationState.perPage;
+
+        rows.forEach((row, idx) => {
+          row.style.display = idx >= start && idx < end ? "" : "none";
+        });
+
+        selectAllCheckbox.checked = false;
+        document.querySelectorAll(".checkbox-row").forEach((cb) => {
+          cb.checked = false;
+        });
+        updateDeleteButton();
+      }
+
+      selectPerPage.addEventListener("change", (e) => {
+        paginationState.perPage = parseInt(e.target.value, 10);
+        paginationState.currentPage = 1;
+        updateTableDisplay();
+        renderPagination();
+      });
 
       document.querySelectorAll(".sortable").forEach((header) => {
         header.addEventListener("click", function () {
@@ -240,13 +345,22 @@
       });
 
       selectAllCheckbox.addEventListener("change", (e) => {
-        checkboxes.forEach((cb) => {
-          cb.checked = e.target.checked;
+        const start =
+          (paginationState.currentPage - 1) * paginationState.perPage;
+        const end = start + paginationState.perPage;
+        const rows = Array.from(
+          document.querySelectorAll("tbody tr:not(:has(td:only-child))")
+        );
+
+        rows.forEach((row, idx) => {
+          if (idx >= start && idx < end) {
+            row.querySelector(".checkbox-row").checked = e.target.checked;
+          }
         });
         updateDeleteButton();
       });
 
-      checkboxes.forEach((cb) => {
+      document.querySelectorAll(".checkbox-row").forEach((cb) => {
         cb.addEventListener("change", updateDeleteButton);
       });
 
@@ -295,7 +409,6 @@
       let currentRowData = null;
 
       document.getElementById("btnAddRow").addEventListener("click", () => {
-        console.log("Add row clicked"); // debug
         document.getElementById("modalTitle").textContent = "Nova Linha";
         document.getElementById("rowForm").reset();
         currentRowData = null;
@@ -305,7 +418,6 @@
 
       document.querySelectorAll(".btn-edit").forEach((btn) => {
         btn.addEventListener("click", (e) => {
-          console.log("Edit row clicked"); // debug
           const row = e.target.closest("tr");
           const rowId = row.getAttribute("data-row-id");
           const rowVersion = row.getAttribute("data-row-version");
@@ -333,8 +445,6 @@
         const formFields = document.getElementById("formFields");
         formFields.innerHTML = "";
 
-        console.log("Rendering fields for columns:", columns); // debug
-
         columns.forEach((col) => {
           const value = values[col.key] || "";
           let input;
@@ -354,11 +464,11 @@
           }
 
           formFields.innerHTML += `
-                    <div class="mb-3">
-                        <label class="form-label">${col.label}</label>
-                        ${input}
-                    </div>
-                `;
+            <div class="mb-3">
+              <label class="form-label">${col.label}</label>
+              ${input}
+            </div>
+          `;
         });
       }
 
@@ -382,7 +492,6 @@
               if (r.ok) {
                 location.reload();
               } else {
-                r.text().then((text) => console.error("Error response:", text));
                 alert("Erro ao atualizar");
               }
             })
@@ -404,7 +513,6 @@
               if (r.ok) {
                 location.reload();
               } else {
-                r.text().then((text) => console.error("Error response:", text));
                 alert("Erro ao criar");
               }
             })
@@ -430,7 +538,7 @@
 
       function validateFieldType(input, type) {
         const value = input.value.trim();
-        if (!value) return; 
+        if (!value) return;
 
         const isValid = {
           NUMBER: !isNaN(value) && value !== "",
@@ -440,6 +548,8 @@
 
         input.classList.toggle("is-invalid", !isValid);
       }
+
+      document.addEventListener("DOMContentLoaded", initPagination);
     </script>
   </body>
 </html>
