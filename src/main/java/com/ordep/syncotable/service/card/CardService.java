@@ -10,6 +10,7 @@ import com.ordep.syncotable.mapper.CardMapper;
 import com.ordep.syncotable.mapper.CardRowMapper;
 import com.ordep.syncotable.model.*;
 import com.ordep.syncotable.repository.*;
+import com.ordep.syncotable.service.PermissionService;
 import com.ordep.syncotable.sheets.Spreadsheet;
 import com.ordep.syncotable.sheets.SpreadsheetFactory;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,6 +40,7 @@ public class CardService {
     private final SpreadsheetFactory spreadsheetFactory;
     private final CardColumnMapper cardColumnMapper;
     private final PermissionRepository permissions;
+    private final PermissionService permissionService;
     private final RoleRepository roles;
 
     public List<CardResponse> findAllCards() {
@@ -106,8 +108,11 @@ public class CardService {
         Spreadsheet sheet = spreadsheetFactory.getHandler(filename);
         try (InputStream is = multipartFile.getInputStream()) {
             List<CardRow> cardRows = sheet.read(is);
-            CardResponse cardResponse = createCard(filename, "", userId);
+            CardResponse cardResponse = createCard(filename, "Adicione uma descrição", userId);
             Card card = findCardById(cardResponse.id());
+
+            permissionService.createPermission(userId, cardResponse.id(), null);
+
             Map<String,Object> headers = cardRows.get(0).getValuesJson();
             for (String key : headers.keySet()) {
                 createColumn(card, key);

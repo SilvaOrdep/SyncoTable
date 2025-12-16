@@ -30,11 +30,15 @@ public class PermissionService {
     public PermissionMatrixResponse createPermission(Long userId, Long cardId, PermissionUpdateRequest permissionUpdateRequest) {
         User user = users.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
         Card card = cards.findById(cardId).orElseThrow(() -> new EntityNotFoundException("Card não encontrado"));
+        Permission permission;
 
-        Permission permission = permissionMapper.toEntity(permissionUpdateRequest);
-
-        permission.setUser(user);
-        permission.setCard(card);
+        if(permissionUpdateRequest != null) {
+            permission = permissionMapper.toEntity(permissionUpdateRequest);
+            permission.setUser(user);
+            permission.setCard(card);
+        } else {
+            permission = createPermission(user, card);
+        }
 
         return permissionMapper.toMatrixResponse(permissions.save(permission));
     }
@@ -87,6 +91,19 @@ public class PermissionService {
         return permissions.findByUser(user).stream()
                 .map(permissionMapper::toMatrixResponse)
                 .collect(Collectors.toList());
+    }
+
+    private Permission createPermission(User user, Card card) {
+
+        return Permission.builder()
+                .canView(true)
+                .canEdit(true)
+                .canCreate(true)
+                .canDelete(true)
+                .card(card)
+                .user(user)
+                .build();
+
     }
 
 }
