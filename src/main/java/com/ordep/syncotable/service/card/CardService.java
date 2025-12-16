@@ -99,6 +99,7 @@ public class CardService {
         column.setCard(card);
         column.setLabel(key.toUpperCase(Locale.ROOT));
         column.setKey(key);
+        column.setType("TEXT");
         columns.save(column);
     }
 
