@@ -13,7 +13,6 @@ import java.util.*;
 
 public class XlsxHandler implements Spreadsheet {
 
-    //posso usar essa função para ler linhas e retornar para outra função que cria a planilha
     public List<CardRow> read(InputStream file) throws IOException {
         List<CardRow> lines = new ArrayList<>();
 
@@ -24,6 +23,11 @@ public class XlsxHandler implements Spreadsheet {
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
+
+                if (isRowEmpty(row)) {
+                    continue;
+                }
+
                 CardRow cardRow = new CardRow();
                 Map<String, Object> rowValues = new LinkedHashMap<>();
 
@@ -41,24 +45,42 @@ public class XlsxHandler implements Spreadsheet {
                             rowValues.put(header.getCell(col).getStringCellValue(), cell.getBooleanCellValue());
                             break;
                         case FORMULA:
-                            if (cell.getCellType().equals(CellType.NUMERIC)) {
-                                rowValues.put(header.getCell(col).getStringCellValue(), cell.getStringCellValue());
+                            switch (cell.getCachedFormulaResultType()) {
+                                case STRING:
+                                    rowValues.put(header.getCell(col).getStringCellValue(), cell.getStringCellValue());
+                                    break;
+                                case NUMERIC:
+                                    rowValues.put(header.getCell(col).getStringCellValue(), cell.getNumericCellValue());
+                                    break;
+                                default:
+                                    rowValues.put(header.getCell(col).getStringCellValue(), "");
                             }
-                            rowValues.put(header.getCell(col).getStringCellValue(), cell.getNumericCellValue());
                             break;
                         default:
-                            rowValues.put("", "");
+                            rowValues.put(header.getCell(col).getStringCellValue(), "");
                     }
                 }
 
                 cardRow.setValuesJson(rowValues);
                 lines.add(cardRow);
 
-                System.out.println(cardRow.getValuesJson());
+                System.out.println(rowValues);
             }
         }
 
         return lines;
     }
+
+    private boolean isRowEmpty(Row row) {
+        if (row == null) return true;
+        for (int col = 0; col < row.getLastCellNum(); col++) {
+            Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            if (cell != null && cell.getCellType() != CellType.BLANK) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
 }

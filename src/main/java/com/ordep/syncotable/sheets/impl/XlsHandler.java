@@ -22,6 +22,11 @@ public class XlsHandler implements Spreadsheet {
             Row header = rows.get(0);
             rows.remove(0);
             for (Row row : rows) {
+
+                if (isRowEmpty(row)) {
+                    continue;
+                }
+
                 Map<String, Object> cellValues = new LinkedHashMap<>();
                 for (Cell cell : row) {
                     switch (cell.getCellType()) {
@@ -35,13 +40,19 @@ public class XlsHandler implements Spreadsheet {
                             cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getBooleanCellValue());
                             break;
                         case FORMULA:
-                            if (cell.getCellType().equals(CellType.NUMERIC)) {
-                                cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getStringCellValue());
+                            switch (cell.getCachedFormulaResultType()) {
+                                case STRING:
+                                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getStringCellValue());
+                                    break;
+                                case NUMERIC:
+                                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getNumericCellValue());
+                                    break;
+                                default:
+                                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), "");
                             }
-                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getNumericCellValue());
                             break;
                         default:
-                            cellValues.put("","");
+                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), "");
                     }
                 }
 
@@ -49,7 +60,7 @@ public class XlsHandler implements Spreadsheet {
                 cardRow.setValuesJson(cellValues);
 
                 cardRows.add(cardRow);
-                System.out.println(cardRow.getValuesJson().entrySet());
+                System.out.println(cardRow.getValuesJson().entrySet() + " Tamanho: " + cardRow.getValuesJson().size());
             }
 
         } catch (IOException e) {
@@ -57,6 +68,17 @@ public class XlsHandler implements Spreadsheet {
         }
 
         return cardRows;
+    }
+
+    private boolean isRowEmpty(Row row) {
+        if (row == null) return true;
+
+        for (Cell cell : row) {
+            if (cell.getCellType() != CellType.BLANK) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public List<?> toList(Iterator<Row> iterator) {
