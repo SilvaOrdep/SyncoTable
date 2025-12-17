@@ -1,5 +1,6 @@
 package com.ordep.syncotable.controller;
 
+import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.row.request.BatchDeleteRowsRequest;
 import com.ordep.syncotable.dto.row.request.CreateRowRequest;
@@ -37,7 +38,14 @@ public class CardController {
         return "card/card";
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("{id}")
+    public String updateCard(@PathVariable Long id, UpdateCardRequest updateCardRequest) {
+        cardService.updateCard(id, updateCardRequest);
+
+        return "redirect:/home";
+    }
+
+    @DeleteMapping("/{id}")
     public String deleteCard(@PathVariable Long id) {
         cardService.deleteCardById(id);
 
