@@ -1,5 +1,6 @@
 package com.ordep.syncotable.service.card;
 
+import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.column.response.CardColumnResponse;
 import com.ordep.syncotable.dto.row.request.CreateRowRequest;
@@ -91,6 +92,15 @@ public class CardService {
         card.setDescription(description);
         card.setCreatedBy(user);
         return cardMapper.toResponse(cards.save(card));
+    }
+
+    @Transactional
+    public void updateCard(Long cardId, UpdateCardRequest updateCardRequest) {
+        Card card = findCardById(cardId);
+
+        cardMapper.updateEntity(updateCardRequest, card);
+
+        cards.save(card);
     }
 
     @Transactional
