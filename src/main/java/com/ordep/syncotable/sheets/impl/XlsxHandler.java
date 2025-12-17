@@ -18,7 +18,8 @@ public class XlsxHandler implements Spreadsheet {
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = sheet.iterator();
             Row header = iterator.next();
-
+            DataFormatter formatter = new DataFormatter();
+            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             while (iterator.hasNext()) {
                 Row row = iterator.next();
 
@@ -27,42 +28,19 @@ public class XlsxHandler implements Spreadsheet {
                 }
 
                 CardRow cardRow = new CardRow();
-                Map<String, Object> rowValues = new LinkedHashMap<>();
+                Map<String, Object> cellValues = new LinkedHashMap<>();
 
                 for (int col = 0; col < row.getLastCellNum(); col++) {
                     Cell cell = row.getCell(col, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 
-                    switch (cell.getCellType()) {
-                        case STRING:
-                            rowValues.put(header.getCell(col).getStringCellValue(), cell.getStringCellValue());
-                            break;
-                        case NUMERIC:
-                            rowValues.put(header.getCell(col).getStringCellValue(), cell.getNumericCellValue());
-                            break;
-                        case BOOLEAN:
-                            rowValues.put(header.getCell(col).getStringCellValue(), cell.getBooleanCellValue());
-                            break;
-                        case FORMULA:
-                            switch (cell.getCachedFormulaResultType()) {
-                                case STRING:
-                                    rowValues.put(header.getCell(col).getStringCellValue(), cell.getStringCellValue());
-                                    break;
-                                case NUMERIC:
-                                    rowValues.put(header.getCell(col).getStringCellValue(), cell.getNumericCellValue());
-                                    break;
-                                default:
-                                    rowValues.put(header.getCell(col).getStringCellValue(), "");
-                            }
-                            break;
-                        default:
-                            rowValues.put(header.getCell(col).getStringCellValue(), "");
-                    }
+                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), formatter.formatCellValue(cell, evaluator));
+
                 }
 
-                cardRow.setValuesJson(rowValues);
+                cardRow.setValuesJson(cellValues);
                 lines.add(cardRow);
 
-                System.out.println(rowValues);
+                System.out.println(cellValues);
             }
         }
 

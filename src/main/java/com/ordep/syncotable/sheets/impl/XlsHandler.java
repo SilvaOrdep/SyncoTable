@@ -3,6 +3,7 @@ package com.ordep.syncotable.sheets.impl;
 import com.ordep.syncotable.model.CardRow;
 import com.ordep.syncotable.sheets.Spreadsheet;
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
@@ -16,6 +17,8 @@ public class XlsHandler implements Spreadsheet {
         List<CardRow> cardRows = new ArrayList<>();
 
         try (Workbook workbook = new HSSFWorkbook(file)) {
+            DataFormatter formatter = new DataFormatter();
+            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             Sheet sheet = workbook.getSheetAt(0);
             List<Row> rows = (List<Row>) toList(sheet.iterator());
             Row header = rows.get(0);
@@ -28,31 +31,7 @@ public class XlsHandler implements Spreadsheet {
 
                 Map<String, Object> cellValues = new LinkedHashMap<>();
                 for (Cell cell : row) {
-                    switch (cell.getCellType()) {
-                        case STRING:
-                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getStringCellValue());
-                            break;
-                        case NUMERIC:
-                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getNumericCellValue());
-                            break;
-                        case BOOLEAN:
-                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getBooleanCellValue());
-                            break;
-                        case FORMULA:
-                            switch (cell.getCachedFormulaResultType()) {
-                                case STRING:
-                                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getStringCellValue());
-                                    break;
-                                case NUMERIC:
-                                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), cell.getNumericCellValue());
-                                    break;
-                                default:
-                                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), "");
-                            }
-                            break;
-                        default:
-                            cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), "");
-                    }
+                    cellValues.put(header.getCell(cell.getColumnIndex()).getStringCellValue(), formatter.formatCellValue(cell, evaluator));
                 }
 
                 CardRow cardRow = new CardRow();
