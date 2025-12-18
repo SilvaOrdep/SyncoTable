@@ -1,4 +1,4 @@
-package com.ordep.syncotable.sheets.impl;
+package com.ordep.syncotable.sheets.impl.reader;
 
 import com.ordep.syncotable.model.CardRow;
 import com.ordep.syncotable.sheets.Spreadsheet;
@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class XlsxHandler implements Spreadsheet {
+public class XlsxReader implements Spreadsheet {
 
     public List<CardRow> read(InputStream file) throws IOException {
         List<CardRow> lines = new ArrayList<>();

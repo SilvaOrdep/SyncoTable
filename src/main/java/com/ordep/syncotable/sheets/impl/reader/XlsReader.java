@@ -1,9 +1,8 @@
-package com.ordep.syncotable.sheets.impl;
+package com.ordep.syncotable.sheets.impl.reader;
 
 import com.ordep.syncotable.model.CardRow;
 import com.ordep.syncotable.sheets.Spreadsheet;
 import org.apache.commons.collections4.IteratorUtils;
-import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
@@ -11,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class XlsHandler implements Spreadsheet {
+public class XlsReader implements Spreadsheet {
 
     public List<CardRow> read(InputStream file) {
         List<CardRow> cardRows = new ArrayList<>();

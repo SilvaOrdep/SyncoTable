@@ -1,21 +1,19 @@
 package com.ordep.syncotable.sheets;
 
-import com.ordep.syncotable.sheets.impl.CsvHandler;
-import com.ordep.syncotable.sheets.impl.XlsHandler;
-import com.ordep.syncotable.sheets.impl.XlsxHandler;
-import org.springframework.stereotype.Component;
+import com.ordep.syncotable.sheets.impl.reader.CsvReader;
+import com.ordep.syncotable.sheets.impl.reader.XlsReader;
+import com.ordep.syncotable.sheets.impl.reader.XlsxReader;
 import org.springframework.stereotype.Service;
 
-import java.io.FileInputStream;
 import java.util.Map;
 
 @Service
 public class SpreadsheetFactory {
 
     private final Map<String, Spreadsheet> handlers = Map.of(
-            "csv", new CsvHandler(),
-            "xls", new XlsHandler(),
-            "xlsx", new XlsxHandler()
+            "csv", new CsvReader(),
+            "xls", new XlsReader(),
+            "xlsx", new XlsxReader()
     );
 
     public Spreadsheet getHandler(String filename){
