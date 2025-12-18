@@ -34,10 +34,54 @@
         font-weight: 500;
         min-width: 200px;
       }
+
+      /* Toast container styles */
+      #toastContainer {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 500px;
+      }
+
+      .toast-notification {
+        margin-bottom: 10px;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      .toast-notification.removing {
+        animation: slideOut 0.3s ease-in forwards;
+      }
     </style>
   </head>
   <body>
     <header th:insert="~{fragments/header :: header}"></header>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
 
     <main class="container-fluid my-4" sec:authorize="hasRole('ADMIN')">
       <div class="d-flex justify-content-between mb-4 align-items-center">
@@ -131,6 +175,7 @@
         permissionsContent: document.getElementById("permissionsContent"),
         permissionsTableBody: document.getElementById("permissionsTableBody"),
         btnSaveChanges: document.getElementById("btnSaveChanges"),
+        toastContainer: document.getElementById("toastContainer"),
       };
 
       (function initCardsFromModel() {
@@ -308,15 +353,26 @@
 
       function showToast(message, type = "info") {
         const toast = document.createElement("div");
-        toast.className = `alert alert-${type} alert-dismissible fade show`;
+        toast.className = `alert alert-${type} alert-dismissible fade show toast-notification`;
         toast.role = "alert";
         toast.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-        document.body.prepend(toast);
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
 
-        setTimeout(() => toast.remove(), 3000);
+        elements.toastContainer.appendChild(toast);
+
+        // Auto-remove após 3 segundos
+        setTimeout(() => {
+          toast.classList.add("removing");
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+
+        // Remover ao clicar no botão de fechar
+        toast.querySelector(".btn-close").addEventListener("click", () => {
+          toast.classList.add("removing");
+          setTimeout(() => toast.remove(), 300);
+        });
       }
     </script>
   </body>
