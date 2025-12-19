@@ -1,5 +1,6 @@
 package com.ordep.syncotable.controller;
 
+import com.ordep.syncotable.dto.column.response.CardColumnResponse;
 import com.ordep.syncotable.dto.permission.request.PermissionUpdateRequest;
 import com.ordep.syncotable.dto.permission.response.PermissionMatrixResponse;
 import com.ordep.syncotable.service.PermissionService;
@@ -61,4 +62,17 @@ public class PermissionAdminController {
     public void deletePermission(@PathVariable Long userId, @PathVariable Long cardId) {
         permissionService.deletePermission(userId, cardId);
     }
+
+    @GetMapping("/card/{cardId}/columns")
+    @ResponseBody
+    public List<CardColumnResponse> getCardColumns(@PathVariable Long cardId) {
+        return cardService.findCardColumnsByCardId(cardId);
+    }
+
+    @GetMapping("/user/{userId}/card/{cardId}")
+    @ResponseBody
+    public PermissionMatrixResponse getUserCardPermissions(@PathVariable Long userId, @PathVariable Long cardId) {
+        return permissionService.findPermissionByUserIdAndCardId(userId, cardId);
+    }
+
 }

@@ -2,10 +2,13 @@ package com.ordep.syncotable.controller;
 
 import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
+import com.ordep.syncotable.dto.permission.response.PermissionMatrixResponse;
 import com.ordep.syncotable.dto.row.request.BatchDeleteRowsRequest;
 import com.ordep.syncotable.dto.row.request.CreateRowRequest;
 import com.ordep.syncotable.dto.row.request.UpdateRowRequest;
 import com.ordep.syncotable.dto.row.response.RowResponse;
+import com.ordep.syncotable.model.User;
+import com.ordep.syncotable.service.PermissionService;
 import com.ordep.syncotable.service.card.CardService;
 import com.ordep.syncotable.service.user.UserService;
 import lombok.AllArgsConstructor;
@@ -23,6 +26,7 @@ public class CardController {
 
     private final CardService cardService;
     private final UserService userService;
+    private final PermissionService permissionService;
 
     @GetMapping("/{id}")
     public String card(Authentication authentication, Model model, @PathVariable Long id, @RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection) {
@@ -66,7 +70,7 @@ public class CardController {
         return "redirect:/card/" + id;
     }
 
-    @PostMapping("/{id}/row/{rowId}")
+    @DeleteMapping("/{id}/row/{rowId}")
     public String deleteRow(@PathVariable Long id, @PathVariable Long rowId) {
         cardService.deleteRow(rowId);
 
@@ -88,6 +92,14 @@ public class CardController {
 
         return "redirect:/card/" + card.id();
     }
+
+    @GetMapping("/{id}/permissions")
+    @ResponseBody
+    public PermissionMatrixResponse getMyCardPermissions(Authentication authentication, @PathVariable Long id) {
+        User currentUser = userService.findUserByEmail(authentication.getName());
+        return permissionService.findPermissionByUserIdAndCardId(currentUser.getId(), id);
+    }
+
 }
 
 

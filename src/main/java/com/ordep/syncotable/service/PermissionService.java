@@ -1,11 +1,12 @@
 package com.ordep.syncotable.service;
 
+import com.ordep.syncotable.dto.permission.request.ColumnPermissionEntry;
 import com.ordep.syncotable.dto.permission.request.PermissionUpdateRequest;
+import com.ordep.syncotable.dto.permission.response.ColumnPermissionEntryResponse;
 import com.ordep.syncotable.dto.permission.response.PermissionMatrixResponse;
+import com.ordep.syncotable.mapper.PermissionColumnMapper;
 import com.ordep.syncotable.mapper.PermissionMapper;
-import com.ordep.syncotable.model.Card;
-import com.ordep.syncotable.model.Permission;
-import com.ordep.syncotable.model.User;
+import com.ordep.syncotable.model.*;
 import com.ordep.syncotable.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class PermissionService {
     private final CardRepository cards;
     private final CardColumnRepository columns;
     private final PermissionMapper permissionMapper;
+    private final PermissionColumnMapper permissionColumnMapper;
     private final RoleRepository roles;
 
     public PermissionMatrixResponse createPermission(Long userId, Long cardId, PermissionUpdateRequest permissionUpdateRequest) {
@@ -40,7 +42,19 @@ public class PermissionService {
             permission = createPermission(user, card);
         }
 
-        return permissionMapper.toMatrixResponse(permissions.save(permission));
+        Permission saved = permissions.save(permission);
+
+        for (CardColumn column : columns.findByCard(card)) {
+            permissionColumns.save(PermissionColumn.builder()
+                    .canView(true)
+                    .canEdit(true)
+                    .permission(saved)
+                    .cardColumn(column)
+                    .build()
+            );
+        }
+
+        return permissionMapper.toMatrixResponse(saved, findPermissionColumnsByPermission(permission));
     }
 
     public PermissionMatrixResponse findPermissionByUserIdAndCardId(Long userId, Long cardId) {
@@ -49,7 +63,7 @@ public class PermissionService {
 
         Permission permission = permissions.findByUserAndCard(user, card).orElseThrow(() -> new EntityNotFoundException("Permissão não encontrada"));
 
-        return permissionMapper.toMatrixResponse(permission);
+        return permissionMapper.toMatrixResponse(permission, findPermissionColumnsByPermission(permission));
     }
 
     @Transactional
@@ -68,7 +82,19 @@ public class PermissionService {
 
         Permission updated = permissions.save(permission);
 
-        return permissionMapper.toMatrixResponse(updated);
+        if (request.columnOverrides() != null) {
+            for (ColumnPermissionEntry entry : request.columnOverrides()) {
+                CardColumn column = columns.findById(entry.columnId()).orElseThrow(() -> new EntityNotFoundException("cardColumn not found"));
+
+                PermissionColumn permissionColumn = permissionColumns.findByCardColumnAndPermission(column, updated).orElseThrow(() -> new EntityNotFoundException("permissionColumn not found"));
+
+                permissionColumnMapper.updateEntity(entry, permissionColumn);
+
+                permissionColumns.save(permissionColumn);
+            }
+        }
+
+        return permissionMapper.toMatrixResponse(updated, findPermissionColumnsByPermission(updated));
     }
 
     @Transactional
@@ -81,6 +107,8 @@ public class PermissionService {
         Permission permission = permissions.findByUserAndCard(user, card)
                 .orElseThrow(() -> new EntityNotFoundException("Permissão não encontrada"));
 
+        permissionColumns.deleteByPermission(permission);
+
         permissions.delete(permission);
     }
 
@@ -89,7 +117,7 @@ public class PermissionService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         return permissions.findByUser(user).stream()
-                .map(permissionMapper::toMatrixResponse)
+                .map(p -> permissionMapper.toMatrixResponse(p, findPermissionColumnsByPermission(p)))
                 .collect(Collectors.toList());
     }
 
@@ -104,6 +132,10 @@ public class PermissionService {
                 .user(user)
                 .build();
 
+    }
+
+    private List<ColumnPermissionEntryResponse> findPermissionColumnsByPermission(Permission permission) {
+        return permissionColumns.findByPermission(permission).stream().map(permissionColumnMapper::toResponse).toList();
     }
 
 }
