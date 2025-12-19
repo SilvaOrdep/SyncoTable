@@ -228,6 +228,10 @@
         totalRows: 0,
       };
 
+      // Column permissions cache
+      let cardPermission = null;
+      const columnPerms = new Map(); // columnId -> { canView, canEdit }
+
       const checkboxes = document.querySelectorAll(".checkbox-row");
       const selectAllCheckbox = document.getElementById("checkboxSelectAll");
       const btnDeleteSelected = document.getElementById("btnDeleteSelected");
@@ -441,26 +445,85 @@
         });
       });
 
+      function applyColumnPermissions() {
+        if (!cardPermission) return;
+
+        // Map overrides
+        columnPerms.clear();
+        (cardPermission.columnOverrides || []).forEach((ov) => {
+          columnPerms.set(ov.columnId, {
+            canView: !!ov.canView,
+            canEdit: !!ov.canEdit,
+          });
+        });
+
+        // Hide non-viewable columns in table header and rows
+        columns.forEach((col, idx) => {
+          const ov = columnPerms.get(col.id);
+          const canView = !ov || ov.canView;
+
+          const headerEl = document.querySelector(
+            `th.sortable[data-column-key="${col.key}"]`
+          );
+          if (headerEl) headerEl.style.display = canView ? "" : "none";
+
+          // rows: first column is checkbox, so data cells start at index 1
+          document.querySelectorAll("tbody tr").forEach((tr) => {
+            const cells = tr.querySelectorAll("td");
+            if (cells.length > 1 + idx) {
+              cells[1 + idx].style.display = canView ? "" : "none";
+            }
+          });
+        });
+
+        // Disable actions based on card-level
+        const canCreate = !!cardPermission.canCreate;
+        const canDelete = !!cardPermission.canDelete;
+        const canEditCard = !!cardPermission.canEdit;
+
+        document
+          .getElementById("btnAddRow")
+          ?.toggleAttribute("disabled", !canCreate);
+        document
+          .getElementById("btnDeleteSelected")
+          ?.toggleAttribute("disabled", !canDelete);
+
+        // disable edit buttons if global edit is false
+        if (!canEditCard) {
+          document
+            .querySelectorAll(".btn-edit")
+            .forEach((b) => b.toggleAttribute("disabled", true));
+        }
+      }
+
+      // Adjust form rendering to respect per-column permissions
       function renderFormFields(values = {}) {
         const formFields = document.getElementById("formFields");
         formFields.innerHTML = "";
 
         columns.forEach((col) => {
+          const ov = columnPerms.get(col.id);
+          const canView = !ov || ov.canView;
+          const canEdit = !ov || ov.canEdit;
+
+          if (!canView) return;
+
           const value = values[col.key] || "";
           let input;
+          const disabledAttr = canEdit ? "" : "disabled";
 
           switch (col.type) {
             case "TEXT":
-              input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}">`;
+              input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
               break;
             case "NUMBER":
-              input = `<input type="number" class="form-control" data-key="${col.key}" value="${value}">`;
+              input = `<input type="number" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
               break;
             case "DATE":
-              input = `<input type="date" class="form-control" data-key="${col.key}" value="${value}">`;
+              input = `<input type="date" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
               break;
             default:
-              input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}">`;
+              input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
           }
 
           formFields.innerHTML += `
@@ -471,6 +534,20 @@
           `;
         });
       }
+
+      // Fetch current user's permission matrix for this card
+      document.addEventListener("DOMContentLoaded", () => {
+        fetch(`/card/${cardId}/permissions`)
+          .then((r) => (r.ok ? r.json() : Promise.reject()))
+          .then((perm) => {
+            cardPermission = perm || null;
+            applyColumnPermissions();
+            initPagination(); // after hiding columns, re-init pagination
+          })
+          .catch(() => {
+            initPagination();
+          });
+      });
 
       document.getElementById("btnSaveRow").addEventListener("click", () => {
         const values = {};
