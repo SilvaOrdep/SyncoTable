@@ -24,7 +24,7 @@ public class HomeController {
         if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
             return "redirect:/home";
         }
-        return "redirect:auth/login";
+        return "redirect:/login";
     }
 
     @GetMapping("/home")
