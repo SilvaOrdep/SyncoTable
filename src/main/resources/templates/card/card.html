@@ -188,6 +188,43 @@
         </div>
       </div>
     </div>
+    <div class="modal fade" id="exportModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Exportação concluída</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <p class="text-success mb-2">
+              ✔ A planilha foi gerada com sucesso.
+            </p>
+
+            <div class="alert alert-secondary small">
+              <strong>Arquivo:</strong> <span id="exportFileName"></span>
+            </div>
+
+            <div class="table-responsive" id="exportPreview" style="display:none;">
+              <table class="table table-sm table-bordered">
+                <thead id="previewHead"></thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <a id="downloadLink" class="btn btn-primary" download>
+              Baixar arquivo
+            </a>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
