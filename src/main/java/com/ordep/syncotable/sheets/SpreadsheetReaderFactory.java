@@ -10,13 +10,13 @@ import java.util.Map;
 @Service
 public class SpreadsheetFactory {
 
-    private final Map<String, Spreadsheet> handlers = Map.of(
+    private final Map<String, SpreadsheetReader> handlers = Map.of(
             "csv", new CsvReader(),
             "xls", new XlsReader(),
             "xlsx", new XlsxReader()
     );
 
-    public Spreadsheet getHandler(String filename){
+    public SpreadsheetReader getHandler(String filename){
         String ext = extractExtension(filename);
         return handlers.get(ext);
     }
