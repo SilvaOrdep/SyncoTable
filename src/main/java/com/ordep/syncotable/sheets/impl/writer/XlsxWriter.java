@@ -4,19 +4,18 @@ import com.ordep.syncotable.model.Card;
 import com.ordep.syncotable.model.CardRow;
 import com.ordep.syncotable.sheets.SpreadsheetWriter;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 public class XlsxWriter implements SpreadsheetWriter {
+
     @Override
-    public OutputStream write(File file, Card card) {
+    public byte[] write(Card card) {
 
         try (Workbook workbook = new XSSFWorkbook();
-             FileOutputStream fos = new FileOutputStream(file)) {
+             ByteArrayOutputStream bao = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet(card.getTitle());
             CellStyle boldStyle = workbook.createCellStyle();
@@ -31,6 +30,8 @@ public class XlsxWriter implements SpreadsheetWriter {
                 Cell cell = headerRow.createCell(headerCol++);
                 cell.setCellValue(key);
                 cell.setCellStyle(boldStyle);
+
+                System.out.println("chave: "+ key);
             }
 
             int rowIndex = 1;
@@ -47,9 +48,9 @@ public class XlsxWriter implements SpreadsheetWriter {
             for (int i = 0; i < headerCol; i++) {
                 sheet.autoSizeColumn(i);
             }
-            workbook.write(fos);
+            workbook.write(bao);
 
-            return fos;
+            return bao.toByteArray();
 
         } catch (IOException e) {
             throw new RuntimeException("Erro ao criar arquivo XLSX", e);

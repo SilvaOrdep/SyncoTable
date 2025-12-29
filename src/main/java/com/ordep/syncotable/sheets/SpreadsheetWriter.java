@@ -7,5 +7,5 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public interface SpreadsheetWriter {
-    OutputStream write(File file, Card card);
+    byte[] write(Card card);
 }

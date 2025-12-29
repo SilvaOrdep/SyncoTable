@@ -7,17 +7,24 @@ import com.ordep.syncotable.dto.row.request.BatchDeleteRowsRequest;
 import com.ordep.syncotable.dto.row.request.CreateRowRequest;
 import com.ordep.syncotable.dto.row.request.UpdateRowRequest;
 import com.ordep.syncotable.dto.row.response.RowResponse;
+import com.ordep.syncotable.model.Card;
 import com.ordep.syncotable.model.User;
 import com.ordep.syncotable.service.PermissionService;
 import com.ordep.syncotable.service.card.CardService;
 import com.ordep.syncotable.service.user.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
 
 @Controller
 @RequestMapping("/card")
@@ -92,6 +99,17 @@ public class CardController {
 
         return "redirect:/card/" + card.id();
     }
+
+    @GetMapping("/{id}/export")
+    public ResponseEntity<byte[]> exportCard(@PathVariable Long id) {
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"card_" + id + ".xlsx\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(cardService.exportSpreadsheet(id));
+    }
+
 
     @GetMapping("/{id}/permissions")
     @ResponseBody

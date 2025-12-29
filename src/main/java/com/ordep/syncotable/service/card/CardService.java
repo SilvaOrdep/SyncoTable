@@ -12,16 +12,16 @@ import com.ordep.syncotable.mapper.CardRowMapper;
 import com.ordep.syncotable.model.*;
 import com.ordep.syncotable.repository.*;
 import com.ordep.syncotable.service.PermissionService;
-import com.ordep.syncotable.sheets.Spreadsheet;
-import com.ordep.syncotable.sheets.SpreadsheetFactory;
+import com.ordep.syncotable.sheets.SpreadsheetReader;
+import com.ordep.syncotable.sheets.SpreadsheetReaderFactory;
+import com.ordep.syncotable.sheets.impl.writer.XlsxWriter;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class CardService {
     private final CardColumnMapper columnMapper;
     private final CardRowRepository rows;
     private final CardRowMapper rowMapper;
-    private final SpreadsheetFactory spreadsheetFactory;
+    private final SpreadsheetReaderFactory spreadsheetReaderFactory;
     private final CardColumnMapper cardColumnMapper;
     private final PermissionRepository permissions;
     private final PermissionService permissionService;
@@ -119,7 +119,7 @@ public class CardService {
     @Transactional
     public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId) {
         String filename = multipartFile.getOriginalFilename();
-        Spreadsheet sheet = spreadsheetFactory.getHandler(filename);
+        SpreadsheetReader sheet = spreadsheetReaderFactory.getReader(filename);
         try (InputStream is = multipartFile.getInputStream()) {
             List<CardRow> cardRows = sheet.read(is);
             CardResponse cardResponse = createCard(filename, "Adicione uma descrição", userId);
@@ -140,7 +140,13 @@ public class CardService {
         }
     }
 
-    public RowResponse createRow(CreateRowRequest createRowRequest) {
+    public byte[] exportSpreadsheet(Long cardId) {
+        Card card = cards.findById(cardId).orElseThrow(() -> new EntityNotFoundException("Card not found"));
+        XlsxWriter xlsxWriter = new XlsxWriter();
+        return xlsxWriter.write(card);
+    }
+
+      public RowResponse createRow(CreateRowRequest createRowRequest) {
         Card card = findCardById(createRowRequest.cardId());
         User user = users.findById(createRowRequest.userId()).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
