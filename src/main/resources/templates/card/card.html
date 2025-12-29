@@ -57,7 +57,8 @@
           <button class="btn btn-danger" id="btnDeleteSelected" disabled>
             Deletar selecionados
           </button>
-          <button class="btn btn-primary" id="btnExportCSV">Exportar</button>
+          <button class="btn btn-primary" id="btnDownloadExport" data-bs-toggle="modal"
+                  data-bs-target="#exportModal">Exportar</button>
         </div>
       </div>
 
@@ -198,7 +199,7 @@
 
           <div class="modal-body">
             <p class="text-success mb-2">
-              ✔ A planilha foi gerada com sucesso.
+               A planilha foi gerada com sucesso.
             </p>
 
             <div class="alert alert-secondary small">
@@ -658,6 +659,9 @@
       }
 
       document.addEventListener("DOMContentLoaded", initPagination);
+      document.getElementById("btnDownloadExport").addEventListener("click", () => {
+        window.location.href = `/card/${cardId}/export`;
+      });
     </script>
   </body>
 </html>
