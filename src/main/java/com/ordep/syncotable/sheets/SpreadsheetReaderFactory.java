@@ -8,17 +8,17 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Service
-public class SpreadsheetFactory {
+public class SpreadsheetReaderFactory {
 
-    private final Map<String, SpreadsheetReader> handlers = Map.of(
+    private final Map<String, SpreadsheetReader> readers = Map.of(
             "csv", new CsvReader(),
             "xls", new XlsReader(),
             "xlsx", new XlsxReader()
     );
 
-    public SpreadsheetReader getHandler(String filename){
+    public SpreadsheetReader getReader(String filename){
         String ext = extractExtension(filename);
-        return handlers.get(ext);
+        return readers.get(ext);
     }
 
     private String extractExtension(String filename){

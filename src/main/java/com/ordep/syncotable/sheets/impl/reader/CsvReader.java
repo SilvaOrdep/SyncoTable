@@ -1,7 +1,7 @@
 package com.ordep.syncotable.sheets.impl.reader;
 
 import com.ordep.syncotable.model.CardRow;
-import com.ordep.syncotable.sheets.Spreadsheet;
+import com.ordep.syncotable.sheets.SpreadsheetReader;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CsvReader implements Spreadsheet {
+public class CsvReader implements SpreadsheetReader {
 
     @Override
     public List<CardRow> read(InputStream inputStream) {
