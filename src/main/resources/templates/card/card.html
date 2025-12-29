@@ -1,511 +1,602 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8"/>
     <title>Card</title>
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-      crossorigin="anonymous"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+            crossorigin="anonymous"
     />
     <style>
-      .sortable {
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-        padding-right: 20px;
-      }
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px;
+        }
 
-      .sortable:hover {
-        background-color: rgba(28, 28, 28, 0.6);
-      }
+        .sortable:hover {
+            background-color: rgba(28, 28, 28, 0.6);
+        }
 
-      .sort-icon {
-        position: absolute;
-        right: 5px;
-        opacity: 0.5;
-        font-size: 0.8em;
-      }
+        .sort-icon {
+            position: absolute;
+            right: 5px;
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
 
-      .sort-icon.active {
-        opacity: 1;
-      }
+        .sort-icon.active {
+            opacity: 1;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
     </style>
-  </head>
-  <body>
-    <header th:insert="~{fragments/header :: header}"></header>
+</head>
+<body>
+<header th:insert="~{fragments/header :: header}"></header>
 
-    <main class="container my-4">
-      <div
-        class="container d-flex justify-content-between mb-3 align-items-center"
-      >
+<main class="container my-4">
+    <div
+            class="container d-flex justify-content-between mb-3 align-items-center"
+    >
         <h3 id="cardTitleHeading" th:text="${card.title()}">Card</h3>
         <div class="d-flex gap-2">
-          <button class="btn btn-light" id="btnAddRow">+ Linha</button>
-          <select id="selectPerPage" class="form-select form-select-sm">
-            <option value="5">5 / página</option>
-            <option value="10" selected>10 / página</option>
-            <option value="25">25 / página</option>
-          </select>
-          <input
-            type="file"
-            id="fileInputXLSX"
-            accept=".xlsx,.xls"
-            style="display: none"
-          />
-          <button class="btn btn-danger" id="btnDeleteSelected" disabled>
-            Deletar selecionados
-          </button>
-          <button class="btn btn-primary" id="btnDownloadExport" data-bs-toggle="modal"
-                  data-bs-target="#exportModal">Exportar</button>
-        </div>
-      </div>
+            <button class="btn btn-light" id="btnAddRow">+ Linha</button>
 
-      <div class="table-responsive glass p-3">
+            <select id="selectPerPage" class="form-select form-select-sm">
+                <option value="5">5 / página</option>
+                <option value="10" selected>10 / página</option>
+                <option value="25">25 / página</option>
+            </select>
+
+            <input
+                    type="file"
+                    id="fileInputXLSX"
+                    accept=".xlsx,.xls"
+                    style="display: none"
+            />
+
+            <button class="btn btn-danger" id="btnDeleteSelected" disabled>
+                Deletar selecionados
+            </button>
+
+            <button class="btn btn-primary" id="btnEditSelected" disabled>
+                Editar selecionados
+            </button>
+
+            <button class="btn btn-success" id="btnDownloadExport" data-bs-toggle="modal"
+                    data-bs-target="#exportModal">Exportar
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive glass p-3">
         <table
-          class="table table-hover table-bordered align-middle text-white"
-          id="dataTable"
+                class="table table-hover table-bordered align-middle text-white"
+                id="dataTable"
         >
-          <thead class="table-dark">
+            <thead class="table-dark">
             <tr>
-              <th style="width: 40px">
-                <input
-                  type="checkbox"
-                  id="checkboxSelectAll"
-                  class="form-check-input"
-                />
-              </th>
-              <th
-                th:each="col : ${columns}"
-                class="sortable"
-                th:data-column-key="${col.key()}"
-                th:classappend="${sortBy == col.key()} ? 'table-active' : ''"
-              >
-                <span th:text="${col.label()}"></span>
-                <span
-                  class="sort-icon"
-                  th:classappend="${sortBy == col.key()} ? 'active' : ''"
+                <th style="width: 40px">
+                    <input
+                            type="checkbox"
+                            id="checkboxSelectAll"
+                            class="form-check-input"
+                    />
+                </th>
+                <th
+                        th:each="col : ${columns}"
+                        class="sortable"
+                        th:data-column-key="${col.key()}"
+                        th:classappend="${sortBy == col.key()} ? 'table-active' : ''"
                 >
+                    <span th:text="${col.label()}"></span>
+                    <span
+                            class="sort-icon"
+                            th:classappend="${sortBy == col.key()} ? 'active' : ''"
+                    >
                   <span th:if="${sortBy == col.key() && sortDirection == 'ASC'}"
-                    >▲</span
+                  >▲</span
                   >
                   <span
-                    th:if="${sortBy == col.key() && sortDirection == 'DESC'}"
-                    >▼</span
+                          th:if="${sortBy == col.key() && sortDirection == 'DESC'}"
+                  >▼</span
                   >
                   <span th:if="${sortBy != col.key() || sortBy == null}"
-                    >⇅</span
+                  >⇅</span
                   >
                 </span>
-              </th>
-              <th>Ações</th>
+                </th>
+                <th>Ações</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             <tr
-              th:each="row : ${rows}"
-              th:data-row-id="${row.id()}"
-              th:data-row-version="${row.version()}"
+                    th:each="row : ${rows}"
+                    th:data-row-id="${row.id()}"
+                    th:data-row-version="${row.version()}"
             >
-              <td>
-                <input
-                  type="checkbox"
-                  class="form-check-input checkbox-row"
-                  th:value="${row.id()}"
-                />
-              </td>
-              <td
-                th:each="col : ${columns}"
-                th:text="${row.values()[col.key()]}"
-              >
-                valor
-              </td>
-              <td>
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-primary btn-edit">Editar</button>
-                  <form
-                    th:action="@{/card/{id}/row/{rowId}(id=${card.id()}, rowId=${row.id()})}"
-                    th:method="delete"
-                  >
-                    <button type="submit" class="btn btn-danger btn-delete">
-                      Deletar
-                    </button>
-                  </form>
-                </div>
-              </td>
+                <td>
+                    <input
+                            type="checkbox"
+                            class="form-check-input checkbox-row"
+                            th:value="${row.id()}"
+                    />
+                </td>
+                <td
+                        th:each="col : ${columns}"
+                        th:text="${row.values()[col.key()]}"
+                >
+                    valor
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-primary btn-edit">Editar</button>
+                        <form
+                                th:action="@{/card/{id}/row/{rowId}(id=${card.id()}, rowId=${row.id()})}"
+                                th:method="delete"
+                        >
+                            <button type="submit" class="btn btn-danger btn-delete">
+                                Deletar
+                            </button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             <tr th:if="${#lists.isEmpty(rows)}">
-              <td
-                th:colspan="${#lists.size(columns)+2}"
-                class="text-center text-muted"
-              >
-                Nenhum registro encontrado.
-              </td>
+                <td
+                        th:colspan="${#lists.size(columns)+2}"
+                        class="text-center text-muted"
+                >
+                    Nenhum registro encontrado.
+                </td>
             </tr>
-          </tbody>
+            </tbody>
         </table>
         <nav>
-          <ul class="pagination" id="pagination"></ul>
+            <ul class="pagination" id="pagination"></ul>
         </nav>
-      </div>
-      <div
-        th:data-card-id="${card.id()}"
-        th:data-sort-by="${sortBy}"
-        th:data-sort-direction="${sortDirection}"
-        th:data-user-id="${userId}"
-        style="display: none"
-      ></div>
-    </main>
+    </div>
+    <div
+            th:data-card-id="${card.id()}"
+            th:data-sort-by="${sortBy}"
+            th:data-sort-direction="${sortDirection}"
+            th:data-user-id="${userId}"
+            style="display: none"
+    </div>
+</main>
 
-    <div class="modal fade" id="rowModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">Nova Linha</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <form id="rowForm">
-              <div id="formFields"></div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancelar
-            </button>
-            <button type="button" class="btn btn-primary" id="btnSaveRow">
-              Salvar
-            </button>
+<!-- Modal de Edição em Lote -->
+<div class="modal fade" id="batchEditModal" tabindex="-1" aria-labelledby="batchEditModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="batchEditModalLabel">
+          Edição em Lote
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Resumo das seleções -->
+        <div class="alert alert-info alert-dismissible fade show" role="alert" id="batchSummary">
+          <strong>Seleção:</strong> <span id="selectedRowsCount">0</span> linha(s) selecionada(s)
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Seleção de coluna -->
+        <div class="mb-4">
+          <label for="batchColumnSelect" class="form-label fw-bold">Escolha a coluna para editar:</label>
+          <select id="batchColumnSelect" class="form-select form-select-lg">
+            <option value="">-- Selecione uma coluna --</option>
+          </select>
+          <small class="text-muted d-block mt-2">Apenas colunas com permissão de edição aparecem aqui.</small>
+        </div>
+
+        <!-- Campo de entrada dinâmico -->
+        <div id="batchInputContainer" class="mb-4" style="display: none;">
+          <label id="batchInputLabel" class="form-label fw-bold">Novo valor:</label>
+          <div id="batchInputWrapper"></div>
+          <small class="text-muted d-block mt-2" id="batchInputHelper"></small>
+        </div>
+
+        <!-- Preview das mudanças -->
+        <div id="batchPreviewContainer" class="mb-3" style="display: none;">
+          <label class="form-label fw-bold">Prévia das mudanças:</label>
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Valor Anterior</th>
+                  <th class="table-success">Novo Valor</th>
+                </tr>
+              </thead>
+              <tbody id="batchPreviewBody">
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="btnBatchClear">Limpar Campos</button>
+        <button type="button" class="btn btn-success" id="btnBatchApply" disabled>
+          Aplicar Mudanças
+        </button>
+      </div>
     </div>
-    <div class="modal fade" id="exportModal" tabindex="-1">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+  </div>
+</div>
+
+<div class="modal fade" id="rowModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Exportação concluída</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-
-          <div class="modal-body">
-            <p class="text-success mb-2">
-               A planilha foi gerada com sucesso.
-            </p>
-
-            <div class="alert alert-secondary small">
-              <strong>Arquivo:</strong> <span id="exportFileName"></span>
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Nova Linha</h5>
+                <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <form id="rowForm">
+                    <div id="formFields"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                >
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSaveRow">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Exportação concluída</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-          </div>
+            <div class="modal-body">
+                <p class="text-success mb-2">
+                    A planilha foi gerada com sucesso.
+                </p>
 
-          <div class="modal-footer">
-            <a id="downloadLink" class="btn btn-primary" download>
-              Baixar arquivo
-            </a>
-            <button class="btn btn-secondary" data-bs-dismiss="modal">
-              Fechar
-            </button>
-          </div>
+                <div class="alert alert-secondary small">
+                    <strong>Arquivo:</strong> <span id="exportFileName"></span>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <a id="downloadLink" class="btn btn-primary" download>
+                    Baixar arquivo
+                </a>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Fechar
+                </button>
+            </div>
         </div>
-      </div>
     </div>
+</div>
 
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-      crossorigin="anonymous"
-    ></script>
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"
+></script>
 
-    <script th:inline="javascript">
-      /*<![CDATA[*/
-      const columnsData = /*[[${columns}]]*/ [];
-      const columns = columnsData.map((col) => ({
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const columnsData = /*[[${columns}]]*/ [];
+    const columns = columnsData.map((col) => ({
         id: col.id,
         key: col.key,
         label: col.label,
         type: col.type,
-      }));
-      /*]]>*/
-    </script>
+    }));
+    /*]]>*/
+</script>
 
-    <script>
-      const cardId = document
+<script>
+    const cardId = document
         .querySelector("[data-card-id]")
         .getAttribute("data-card-id");
-      const userId = document
+    const userId = document
         .querySelector("[data-card-id]")
         .getAttribute("data-user-id");
-      const currentSortBy = document
+    const currentSortBy = document
         .querySelector("[data-card-id]")
         .getAttribute("data-sort-by");
-      const currentSortDirection =
+    const currentSortDirection =
         document
-          .querySelector("[data-card-id]")
-          .getAttribute("data-sort-direction") || "ASC";
+            .querySelector("[data-card-id]")
+            .getAttribute("data-sort-direction") || "ASC";
 
-      let paginationState = {
+    let paginationState = {
         currentPage: 1,
         perPage: 10,
         totalRows: 0,
-      };
+    };
 
-      // Column permissions cache
-      let cardPermission = null;
-      const columnPerms = new Map(); // columnId -> { canView, canEdit }
+    // Column permissions cache
+    let cardPermission = null;
+    const columnPerms = new Map(); // columnId -> { canView, canEdit }
 
-      const checkboxes = document.querySelectorAll(".checkbox-row");
-      const selectAllCheckbox = document.getElementById("checkboxSelectAll");
-      const btnDeleteSelected = document.getElementById("btnDeleteSelected");
-      const selectPerPage = document.getElementById("selectPerPage");
-      const paginationContainer = document.getElementById("pagination");
+    const checkboxes = document.querySelectorAll(".checkbox-row");
+    const selectAllCheckbox = document.getElementById("checkboxSelectAll");
+    const btnDeleteSelected = document.getElementById("btnDeleteSelected");
+    const btnEditSelected = document.getElementById("btnEditSelected");
+    const selectPerPage = document.getElementById("selectPerPage");
+    const paginationContainer = document.getElementById("pagination");
 
-      function initPagination() {
+    function initPagination() {
         const totalRows = document.querySelectorAll(
-          "tbody tr:not(:has(td:only-child))"
+            "tbody tr:not(:has(td:only-child))"
         ).length;
         paginationState.totalRows = totalRows;
         paginationState.currentPage = 1;
         renderPagination();
-      }
+    }
 
-      function renderPagination() {
+    function renderPagination() {
         paginationContainer.innerHTML = "";
         const totalPages = Math.ceil(
-          paginationState.totalRows / paginationState.perPage
+            paginationState.totalRows / paginationState.perPage
         );
 
         if (totalPages <= 1) return;
 
         const prevLi = document.createElement("li");
         prevLi.className = `page-item ${
-          paginationState.currentPage === 1 ? "disabled" : ""
+            paginationState.currentPage === 1 ? "disabled" : ""
         }`;
         prevLi.innerHTML = `<a class="page-link" href="#" ${
-          paginationState.currentPage === 1
-            ? "tabindex='-1' aria-disabled='true'"
-            : ""
+            paginationState.currentPage === 1
+                ? "tabindex='-1' aria-disabled='true'"
+                : ""
         }>Anterior</a>`;
         prevLi.addEventListener("click", (e) => {
-          e.preventDefault();
-          if (paginationState.currentPage > 1) {
-            paginationState.currentPage--;
-            updateTableDisplay();
-            renderPagination();
-          }
+            e.preventDefault();
+            if (paginationState.currentPage > 1) {
+                paginationState.currentPage--;
+                updateTableDisplay();
+                renderPagination();
+            }
         });
         paginationContainer.appendChild(prevLi);
 
         for (let i = 1; i <= totalPages; i++) {
-          const li = document.createElement("li");
-          li.className = `page-item ${
-            i === paginationState.currentPage ? "active" : ""
-          }`;
-          li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-          li.addEventListener("click", (e) => {
-            e.preventDefault();
-            paginationState.currentPage = i;
-            updateTableDisplay();
-            renderPagination();
-          });
-          paginationContainer.appendChild(li);
+            const li = document.createElement("li");
+            li.className = `page-item ${
+                i === paginationState.currentPage ? "active" : ""
+            }`;
+            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+            li.addEventListener("click", (e) => {
+                e.preventDefault();
+                paginationState.currentPage = i;
+                updateTableDisplay();
+                renderPagination();
+            });
+            paginationContainer.appendChild(li);
         }
 
         const nextLi = document.createElement("li");
         nextLi.className = `page-item ${
-          paginationState.currentPage === totalPages ? "disabled" : ""
+            paginationState.currentPage === totalPages ? "disabled" : ""
         }`;
         nextLi.innerHTML = `<a class="page-link" href="#" ${
-          paginationState.currentPage === totalPages
-            ? "tabindex='-1' aria-disabled='true'"
-            : ""
+            paginationState.currentPage === totalPages
+                ? "tabindex='-1' aria-disabled='true'"
+                : ""
         }>Próximo</a>`;
         nextLi.addEventListener("click", (e) => {
-          e.preventDefault();
-          if (paginationState.currentPage < totalPages) {
-            paginationState.currentPage++;
-            updateTableDisplay();
-            renderPagination();
-          }
+            e.preventDefault();
+            if (paginationState.currentPage < totalPages) {
+                paginationState.currentPage++;
+                updateTableDisplay();
+                renderPagination();
+            }
         });
         paginationContainer.appendChild(nextLi);
-      }
+    }
 
-      function updateTableDisplay() {
+    function updateTableDisplay() {
         const rows = Array.from(
-          document.querySelectorAll("tbody tr:not(:has(td:only-child))")
+            document.querySelectorAll("tbody tr:not(:has(td:only-child))")
         );
         const start =
-          (paginationState.currentPage - 1) * paginationState.perPage;
+            (paginationState.currentPage - 1) * paginationState.perPage;
         const end = start + paginationState.perPage;
 
         rows.forEach((row, idx) => {
-          row.style.display = idx >= start && idx < end ? "" : "none";
+            row.style.display = idx >= start && idx < end ? "" : "none";
         });
 
         selectAllCheckbox.checked = false;
         document.querySelectorAll(".checkbox-row").forEach((cb) => {
-          cb.checked = false;
+            cb.checked = false;
         });
         updateDeleteButton();
-      }
+        updateEditButton();
+    }
 
-      selectPerPage.addEventListener("change", (e) => {
+    selectPerPage.addEventListener("change", (e) => {
         paginationState.perPage = parseInt(e.target.value, 10);
         paginationState.currentPage = 1;
         updateTableDisplay();
         renderPagination();
-      });
+    });
 
-      document.querySelectorAll(".sortable").forEach((header) => {
+    document.querySelectorAll(".sortable").forEach((header) => {
         header.addEventListener("click", function () {
-          const columnKey = this.getAttribute("data-column-key");
-          let newDirection = "ASC";
+            const columnKey = this.getAttribute("data-column-key");
+            let newDirection = "ASC";
 
-          if (currentSortBy === columnKey) {
-            newDirection = currentSortDirection === "ASC" ? "DESC" : "ASC";
-          }
+            if (currentSortBy === columnKey) {
+                newDirection = currentSortDirection === "ASC" ? "DESC" : "ASC";
+            }
 
-          window.location.href = `/card/${cardId}?sortBy=${columnKey}&sortDirection=${newDirection}`;
+            window.location.href = `/card/${cardId}?sortBy=${columnKey}&sortDirection=${newDirection}`;
         });
-      });
+    });
 
-      selectAllCheckbox.addEventListener("change", (e) => {
+    selectAllCheckbox.addEventListener("change", (e) => {
         const start =
-          (paginationState.currentPage - 1) * paginationState.perPage;
+            (paginationState.currentPage - 1) * paginationState.perPage;
         const end = start + paginationState.perPage;
         const rows = Array.from(
-          document.querySelectorAll("tbody tr:not(:has(td:only-child))")
+            document.querySelectorAll("tbody tr:not(:has(td:only-child))")
         );
 
         rows.forEach((row, idx) => {
-          if (idx >= start && idx < end) {
-            row.querySelector(".checkbox-row").checked = e.target.checked;
-          }
+            if (idx >= start && idx < end) {
+                row.querySelector(".checkbox-row").checked = e.target.checked;
+            }
         });
         updateDeleteButton();
-      });
+        updateEditButton();
+    });
 
-      document.querySelectorAll(".checkbox-row").forEach((cb) => {
-        cb.addEventListener("change", updateDeleteButton);
-      });
-
-      function updateDeleteButton() {
+    function updateEditButton() {
         const checkedCount = document.querySelectorAll(
-          ".checkbox-row:checked"
+            ".checkbox-row:checked"
+        ).length;
+        btnEditSelected.disabled = checkedCount === 0;
+    }
+
+    function updateDeleteButton() {
+        const checkedCount = document.querySelectorAll(
+            ".checkbox-row:checked"
         ).length;
         btnDeleteSelected.disabled = checkedCount === 0;
-      }
+    }
 
-      btnDeleteSelected.addEventListener("click", () => {
+    document.querySelectorAll(".checkbox-row").forEach((cb) => {
+        cb.addEventListener("change", updateDeleteButton);
+        cb.addEventListener("change", updateEditButton);
+    });
+
+    btnDeleteSelected.addEventListener("click", () => {
         const selectedIds = Array.from(
-          document.querySelectorAll(".checkbox-row:checked")
+            document.querySelectorAll(".checkbox-row:checked")
         ).map((cb) => cb.value);
 
         if (selectedIds.length === 0) {
-          alert("Selecione ao menos uma linha");
-          return;
+            alert("Selecione ao menos uma linha");
+            return;
         }
 
         if (!confirm(`Deseja deletar ${selectedIds.length} linha(s)?`)) {
-          return;
+            return;
         }
 
         fetch(`/card/${cardId}/row/batch-delete`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ rowIds: selectedIds }),
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({rowIds: selectedIds}),
         })
-          .then((response) => {
-            if (response.ok) {
-              location.reload();
-            } else {
-              alert("Erro ao deletar linhas");
-            }
-          })
-          .catch((error) => {
-            console.error("Erro:", error);
-            alert("Erro ao deletar linhas");
-          });
-      });
+            .then((response) => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Erro ao deletar linhas");
+                }
+            })
+            .catch((error) => {
+                console.error("Erro:", error);
+                alert("Erro ao deletar linhas");
+            });
+    });
 
-      const rowModal = new bootstrap.Modal(document.getElementById("rowModal"));
-      let currentRowData = null;
+    const rowModal = new bootstrap.Modal(document.getElementById("rowModal"));
+    let currentRowData = null;
 
-      document.getElementById("btnAddRow").addEventListener("click", () => {
+    document.getElementById("btnAddRow").addEventListener("click", () => {
         document.getElementById("modalTitle").textContent = "Nova Linha";
         document.getElementById("rowForm").reset();
         currentRowData = null;
         renderFormFields();
         rowModal.show();
-      });
+    });
 
-      document.querySelectorAll(".btn-edit").forEach((btn) => {
+    document.querySelectorAll(".btn-edit").forEach((btn) => {
         btn.addEventListener("click", (e) => {
-          const row = e.target.closest("tr");
-          const rowId = row.getAttribute("data-row-id");
-          const rowVersion = row.getAttribute("data-row-version");
-          const values = {};
+            const row = e.target.closest("tr");
+            const rowId = row.getAttribute("data-row-id");
+            const rowVersion = row.getAttribute("data-row-version");
+            const values = {};
 
-          row.querySelectorAll("td").forEach((td, idx) => {
-            if (idx > 0 && idx <= columns.length) {
-              values[columns[idx - 1].key] = td.textContent.trim();
-            }
-          });
+            row.querySelectorAll("td").forEach((td, idx) => {
+                if (idx > 0 && idx <= columns.length) {
+                    values[columns[idx - 1].key] = td.textContent.trim();
+                }
+            });
 
-          currentRowData = {
-            id: rowId,
-            values: values,
-            version: parseInt(rowVersion),
-          };
+            currentRowData = {
+                id: rowId,
+                values: values,
+                version: parseInt(rowVersion),
+            };
 
-          document.getElementById("modalTitle").textContent = "Editar Linha";
-          renderFormFields(values);
-          rowModal.show();
+            document.getElementById("modalTitle").textContent = "Editar Linha";
+            renderFormFields(values);
+            rowModal.show();
         });
-      });
+    });
 
-      function applyColumnPermissions() {
+    function applyColumnPermissions() {
         if (!cardPermission) return;
 
         // Map overrides
         columnPerms.clear();
         (cardPermission.columnOverrides || []).forEach((ov) => {
-          columnPerms.set(ov.columnId, {
-            canView: !!ov.canView,
-            canEdit: !!ov.canEdit,
-          });
+            columnPerms.set(ov.columnId, {
+                canView: !!ov.canView,
+                canEdit: !!ov.canEdit,
+            });
         });
 
         // Hide non-viewable columns in table header and rows
         columns.forEach((col, idx) => {
-          const ov = columnPerms.get(col.id);
-          const canView = !ov || ov.canView;
+            const ov = columnPerms.get(col.id);
+            const canView = !ov || ov.canView;
 
-          const headerEl = document.querySelector(
-            `th.sortable[data-column-key="${col.key}"]`
-          );
-          if (headerEl) headerEl.style.display = canView ? "" : "none";
+            const headerEl = document.querySelector(
+                `th.sortable[data-column-key="${col.key}"]`
+            );
+            if (headerEl) headerEl.style.display = canView ? "" : "none";
 
-          // rows: first column is checkbox, so data cells start at index 1
-          document.querySelectorAll("tbody tr").forEach((tr) => {
-            const cells = tr.querySelectorAll("td");
-            if (cells.length > 1 + idx) {
-              cells[1 + idx].style.display = canView ? "" : "none";
-            }
-          });
+            // rows: first column is checkbox, so data cells start at index 1
+            document.querySelectorAll("tbody tr").forEach((tr) => {
+                const cells = tr.querySelectorAll("td");
+                if (cells.length > 1 + idx) {
+                    cells[1 + idx].style.display = canView ? "" : "none";
+                }
+            });
         });
 
         // Disable actions based on card-level
@@ -514,154 +605,424 @@
         const canEditCard = !!cardPermission.canEdit;
 
         document
-          .getElementById("btnAddRow")
-          ?.toggleAttribute("disabled", !canCreate);
+            .getElementById("btnAddRow")
+            ?.toggleAttribute("disabled", !canCreate);
         document
-          .getElementById("btnDeleteSelected")
-          ?.toggleAttribute("disabled", !canDelete);
+            .getElementById("btnDeleteSelected")
+            ?.toggleAttribute("disabled", !canDelete);
+        document
+            .getElementById("btnEditSelected")
+            ?.toggleAttribute("disabled", !canEditCard);
 
-        // disable edit buttons if global edit is false
         if (!canEditCard) {
-          document
-            .querySelectorAll(".btn-edit")
-            .forEach((b) => b.toggleAttribute("disabled", true));
+            document
+                .querySelectorAll(".btn-edit")
+                .forEach((b) => b.toggleAttribute("disabled", true));
         }
-      }
+    }
 
-      // Adjust form rendering to respect per-column permissions
-      function renderFormFields(values = {}) {
+    function renderFormFields(values = {}) {
         const formFields = document.getElementById("formFields");
         formFields.innerHTML = "";
 
         columns.forEach((col) => {
-          const ov = columnPerms.get(col.id);
-          const canView = !ov || ov.canView;
-          const canEdit = !ov || ov.canEdit;
+            const ov = columnPerms.get(col.id);
+            const canView = !ov || ov.canView;
+            const canEdit = !ov || ov.canEdit;
 
-          if (!canView) return;
+            if (!canView) return;
 
-          const value = values[col.key] || "";
-          let input;
-          const disabledAttr = canEdit ? "" : "disabled";
+            const value = values[col.key] || "";
+            let input;
+            const disabledAttr = canEdit ? "" : "disabled";
 
-          switch (col.type) {
-            case "TEXT":
-              input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
-              break;
-            case "NUMBER":
-              input = `<input type="number" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
-              break;
-            case "DATE":
-              input = `<input type="date" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
-              break;
-            default:
-              input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
-          }
+            switch (col.type) {
+                case "TEXT":
+                    input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
+                    break;
+                case "NUMBER":
+                    input = `<input type="number" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
+                    break;
+                case "DATE":
+                    input = `<input type="date" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
+                    break;
+                default:
+                    input = `<input type="text" class="form-control" data-key="${col.key}" value="${value}" ${disabledAttr}>`;
+            }
 
-          formFields.innerHTML += `
+            formFields.innerHTML += `
             <div class="mb-3">
               <label class="form-label">${col.label}</label>
               ${input}
             </div>
           `;
         });
-      }
+    }
 
-      // Fetch current user's permission matrix for this card
-      document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => {
         fetch(`/card/${cardId}/permissions`)
-          .then((r) => (r.ok ? r.json() : Promise.reject()))
-          .then((perm) => {
-            cardPermission = perm || null;
-            applyColumnPermissions();
-            initPagination(); // after hiding columns, re-init pagination
-          })
-          .catch(() => {
-            initPagination();
-          });
-      });
+            .then((r) => (r.ok ? r.json() : Promise.reject()))
+            .then((perm) => {
+                cardPermission = perm || null;
+                applyColumnPermissions();
+                initPagination(); // after hiding columns, re-init pagination
+            })
+            .catch(() => {
+                initPagination();
+            });
+    });
 
-      document.getElementById("btnSaveRow").addEventListener("click", () => {
+    document.getElementById("btnSaveRow").addEventListener("click", () => {
         const values = {};
         document.querySelectorAll("#rowForm input").forEach((input) => {
-          values[input.getAttribute("data-key")] = input.value;
+            values[input.getAttribute("data-key")] = input.value;
         });
 
         if (currentRowData) {
-          fetch(`/card/${cardId}/row/update`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              rowId: currentRowData.id,
-              version: currentRowData.version,
-              values: values,
-            }),
-          })
-            .then((r) => {
-              if (r.ok) {
-                location.reload();
-              } else {
-                alert("Erro ao atualizar");
-              }
+            fetch(`/card/${cardId}/row/update`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    rowId: currentRowData.id,
+                    version: currentRowData.version,
+                    values: values,
+                }),
             })
-            .catch((err) => {
-              console.error("Fetch error:", err);
-              alert("Erro ao atualizar");
-            });
+                .then((r) => {
+                    if (r.ok) {
+                        location.reload();
+                    } else {
+                        alert("Erro ao atualizar");
+                    }
+                })
+                .catch((err) => {
+                    console.error("Fetch error:", err);
+                    alert("Erro ao atualizar");
+                });
         } else {
-          fetch(`/card/${cardId}/row`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              cardId: parseInt(cardId),
-              userId: parseInt(userId),
-              values: values,
-            }),
-          })
-            .then((r) => {
-              if (r.ok) {
-                location.reload();
-              } else {
-                alert("Erro ao criar");
-              }
+            fetch(`/card/${cardId}/row`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    cardId: parseInt(cardId),
+                    userId: parseInt(userId),
+                    values: values,
+                }),
             })
-            .catch((err) => {
-              console.error("Fetch error:", err);
-              alert("Erro ao criar");
-            });
+                .then((r) => {
+                    if (r.ok) {
+                        location.reload();
+                    } else {
+                        alert("Erro ao criar");
+                    }
+                })
+                .catch((err) => {
+                    console.error("Fetch error:", err);
+                    alert("Erro ao criar");
+                });
         }
 
         rowModal.hide();
-      });
+    });
 
-      document.getElementById("rowForm").addEventListener("input", (e) => {
+    document.getElementById("rowForm").addEventListener("input", (e) => {
         if (e.target.classList.contains("form-control")) {
-          const key = e.target.getAttribute("data-key");
-          const col = columns.find((c) => c.key === key);
+            const key = e.target.getAttribute("data-key");
+            const col = columns.find((c) => c.key === key);
 
-          if (col) {
-            validateFieldType(e.target, col.type);
-          }
+            if (col) {
+                validateFieldType(e.target, col.type);
+            }
         }
-      });
+    });
 
-      function validateFieldType(input, type) {
+    function validateFieldType(input, type) {
         const value = input.value.trim();
         if (!value) return;
 
         const isValid = {
-          NUMBER: !isNaN(value) && value !== "",
-          DATE: !isNaN(Date.parse(value)),
-          TEXT: true,
+            NUMBER: !isNaN(value) && value !== "",
+            DATE: !isNaN(Date.parse(value)),
+            TEXT: true,
         }[type];
 
         input.classList.toggle("is-invalid", !isValid);
-      }
+    }
 
-      document.addEventListener("DOMContentLoaded", initPagination);
-      document.getElementById("btnDownloadExport").addEventListener("click", () => {
+    document.addEventListener("DOMContentLoaded", initPagination);
+    document.getElementById("btnDownloadExport").addEventListener("click", () => {
         window.location.href = `/card/${cardId}/export`;
-      });
-    </script>
-  </body>
+    });
+
+    // ========== BATCH EDIT FUNCTIONALITY ==========
+    const batchEditModal = new bootstrap.Modal(document.getElementById("batchEditModal"));
+    let batchState = {
+        selectedRowIds: [],
+        selectedColumnId: null,
+        selectedColumnKey: null,
+        newValue: "",
+        originalValues: new Map(), // rowId -> originalValue
+    };
+
+    // Event listener para abrir modal de edição em lote
+    document.getElementById("btnEditSelected").addEventListener("click", () => {
+        const checkedIds = Array.from(
+            document.querySelectorAll(".checkbox-row:checked")
+        ).map((cb) => cb.value);
+
+        if (checkedIds.length === 0) {
+            alert("Selecione ao menos uma linha");
+            return;
+        }
+
+        // Reset batch state
+        batchState = {
+            selectedRowIds: checkedIds,
+            selectedColumnId: null,
+            selectedColumnKey: null,
+            newValue: "",
+            originalValues: new Map(),
+        };
+
+        // Update UI
+        document.getElementById("selectedRowsCount").textContent = checkedIds.length;
+        populateBatchColumns();
+        clearBatchInputs();
+        batchEditModal.show();
+    });
+
+    function populateBatchColumns() {
+        const select = document.getElementById("batchColumnSelect");
+        select.innerHTML = '<option value="">-- Selecione uma coluna --</option>';
+
+        columns.forEach((col) => {
+            const ov = columnPerms.get(col.id);
+            const canEdit = !ov || ov.canEdit;
+            const canView = !ov || ov.canView;
+
+            if (!canView || !canEdit) return;
+
+            const option = document.createElement("option");
+            option.value = col.id;
+            option.textContent = col.label;
+            option.dataset.type = col.type;
+            option.dataset.key = col.key;
+            select.appendChild(option);
+        });
+    }
+
+    function clearBatchInputs() {
+        batchState.selectedColumnId = null;
+        batchState.selectedColumnKey = null;
+        batchState.newValue = "";
+        batchState.originalValues.clear();
+
+        document.getElementById("batchColumnSelect").value = "";
+        document.getElementById("batchInputContainer").style.display = "none";
+        document.getElementById("batchPreviewContainer").style.display = "none";
+        document.getElementById("btnBatchApply").disabled = true;
+    }
+
+    document.getElementById("batchColumnSelect").addEventListener("change", (e) => {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+
+        if (!selectedOption.value) {
+            clearBatchInputs();
+            return;
+        }
+
+        batchState.selectedColumnId = parseInt(selectedOption.value);
+        batchState.selectedColumnKey = selectedOption.dataset.key;
+        const columnType = selectedOption.dataset.type;
+
+        renderBatchInput(columnType, selectedOption.textContent);
+        loadOriginalValues();
+    });
+
+    function renderBatchInput(type, columnLabel) {
+        const container = document.getElementById("batchInputWrapper");
+        const label = document.getElementById("batchInputLabel");
+        const helper = document.getElementById("batchInputHelper");
+
+        label.textContent = `Novo valor para "${columnLabel}":`;
+        container.innerHTML = "";
+
+        let input = "";
+        let helpText = "";
+
+        switch (type) {
+            case "TEXT":
+                input = `<input type="text" class="form-control form-control-lg" id="batchInputField" placeholder="Digite o novo texto">`;
+                helpText = "Deixe vazio para não alterar o valor.";
+                break;
+
+            case "NUMBER":
+                input = `<input type="number" class="form-control form-control-lg" id="batchInputField" placeholder="Digite o número" step="any">`;
+                helpText = "Valores numéricos apenas. Deixe vazio para não alterar.";
+                break;
+
+            case "DATE":
+                input = `<input type="date" class="form-control form-control-lg" id="batchInputField">`;
+                helpText = "Selecione uma data.";
+                break;
+
+            default:
+                input = `<input type="text" class="form-control form-control-lg" id="batchInputField" placeholder="Digite o novo valor">`;
+                helpText = "Deixe vazio para não alterar o valor.";
+        }
+
+        container.innerHTML = input;
+        helper.textContent = helpText;
+
+        document.getElementById("batchInputContainer").style.display = "block";
+
+        // Listener para atualizar preview em tempo real
+        document
+            .getElementById("batchInputField")
+            .addEventListener("input", (e) => {
+                batchState.newValue = e.target.value;
+                updateBatchPreview();
+            });
+    }
+
+    function loadOriginalValues() {
+        batchState.originalValues.clear();
+
+        batchState.selectedRowIds.forEach((rowId) => {
+            const row = document.querySelector(
+                `tbody tr[data-row-id="${rowId}"]`
+            );
+
+            if (row) {
+                // Find the cell with the matching column
+                const columnIndex = columns.findIndex(
+                    (c) => c.key === batchState.selectedColumnKey
+                );
+
+                if (columnIndex >= 0) {
+                    const cellValue =
+                        row.querySelectorAll("td")[columnIndex + 1]?.textContent?.trim() ||
+                        "";
+                    batchState.originalValues.set(rowId, cellValue);
+                }
+            }
+        });
+    }
+
+    function updateBatchPreview() {
+        if (!batchState.newValue && batchState.newValue !== "0") {
+            document.getElementById("batchPreviewContainer").style.display = "none";
+            document.getElementById("btnBatchApply").disabled = true;
+            return;
+        }
+
+        const previewBody = document.getElementById("batchPreviewBody");
+        previewBody.innerHTML = "";
+
+        let hasChanges = false;
+
+        batchState.selectedRowIds.forEach((rowId, index) => {
+            const originalValue = batchState.originalValues.get(rowId) || "";
+            const willChange =
+                originalValue.toString() !== batchState.newValue.toString();
+
+            if (willChange) {
+                hasChanges = true;
+            }
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td><small>${index + 1}</small></td>
+                <td><code>${escapeHtml(originalValue)}</code></td>
+                <td class="table-success">
+                    <code>${escapeHtml(batchState.newValue)}</code>
+                    ${willChange ? '<span class="badge bg-warning ms-2">Alterado</span>' : ""}
+                </td>
+            `;
+            previewBody.appendChild(row);
+        });
+
+        document.getElementById("batchPreviewContainer").style.display =
+            hasChanges ? "block" : "none";
+        document.getElementById("btnBatchApply").disabled = !hasChanges;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    document.getElementById("btnBatchClear").addEventListener("click", () => {
+        clearBatchInputs();
+        populateBatchColumns();
+    });
+
+    document.getElementById("btnBatchApply").addEventListener("click", () => {
+        if (
+            !batchState.selectedRowIds.length ||
+            !batchState.selectedColumnKey ||
+            batchState.newValue === undefined
+        ) {
+            alert("Dados inválidos");
+            return;
+        }
+
+        if (
+            !confirm(
+                `Deseja aplicar esta mudança em ${batchState.selectedRowIds.length} linha(s)?`
+            )
+        ) {
+            return;
+        }
+
+        applyBatchEdit();
+    });
+
+    function applyBatchEdit() {
+        const updates = batchState.selectedRowIds.map((rowId) => ({
+            rowId: parseInt(rowId),
+            columnKey: batchState.selectedColumnKey,
+            newValue: batchState.newValue,
+            version: parseInt(
+                document.querySelector(`tr[data-row-id="${rowId}"]`)?.getAttribute(
+                    "data-row-version"
+                ) || 0
+            ),
+        }));
+
+        // Show loading state
+        const btnApply = document.getElementById("btnBatchApply");
+        btnApply.disabled = true;
+        const originalText = btnApply.innerHTML;
+        btnApply.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Aplicando...';
+
+        fetch(`/card/${cardId}/row/batch-edit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates),
+        })
+            .then((r) => {
+                if (r.ok) {
+                    batchEditModal.hide();
+                    location.reload();
+                } else {
+                    return r.json().then((err) => {
+                        throw new Error(err.message || "Erro ao aplicar edições");
+                    });
+                }
+            })
+            .catch((err) => {
+                console.error("Erro:", err);
+                alert(`Erro ao aplicar edições: ${err.message}`);
+            })
+            .finally(() => {
+                btnApply.disabled = false;
+                btnApply.innerHTML = originalText;
+            });
+    }
+
+</script>
+</body>
 </html>
