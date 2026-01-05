@@ -105,7 +105,7 @@ public class CardController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"card_" + id + ".xlsx\"")
+                        "attachment; filename=\"" + cardService.findCard(id).title() + ".xlsx\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(cardService.exportSpreadsheet(id));
     }
