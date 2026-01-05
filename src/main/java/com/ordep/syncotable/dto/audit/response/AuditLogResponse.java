@@ -9,6 +9,7 @@ public record AuditLogResponse(
     Long entityId,
     String action,
     Long userId,
+    String userName,
     Instant timestamp,
     Map<String, Object> diff) {
 }

@@ -10,6 +10,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface AuditLogMapper {
 
     @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "userName", source = "user.username")
     @Mapping(target = "diff", ignore = true)
     AuditLogResponse toResponse(AuditLog auditLog);
 
