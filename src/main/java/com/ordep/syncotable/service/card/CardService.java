@@ -1,5 +1,6 @@
 package com.ordep.syncotable.service.card;
 
+import com.ordep.syncotable.dto.audit.response.AuditLogResponse;
 import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.column.response.CardColumnResponse;
@@ -12,6 +13,7 @@ import com.ordep.syncotable.mapper.CardRowMapper;
 import com.ordep.syncotable.model.*;
 import com.ordep.syncotable.repository.*;
 import com.ordep.syncotable.service.PermissionService;
+import com.ordep.syncotable.service.audit.AuditLogService;
 import com.ordep.syncotable.sheets.SpreadsheetReader;
 import com.ordep.syncotable.sheets.SpreadsheetReaderFactory;
 import com.ordep.syncotable.sheets.impl.writer.XlsxWriter;
@@ -46,6 +48,7 @@ public class CardService {
     private final PermissionRepository permissions;
     private final PermissionService permissionService;
     private final RoleRepository roles;
+    private final AuditLogService logService;
 
     public List<CardResponse> findAllCards() {
         return cards.findAll().stream().map(cardMapper::toResponse).toList();
@@ -94,6 +97,7 @@ public class CardService {
         card.setTitle(title);
         card.setDescription(description);
         card.setCreatedBy(user);
+        logService.createAuditLog("Card", card.getId(), "Criou um card", user);
         return cardMapper.toResponse(cards.save(card));
     }
 
