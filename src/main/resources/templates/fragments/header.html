@@ -44,6 +44,10 @@
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link" th:href="@{/admin/permissions}">Gestão de permissões</a>
                 </li>
+
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/audit}">Consultar logs</a>
+                </li>
             </ul>
 
             <ul class="navbar-nav">

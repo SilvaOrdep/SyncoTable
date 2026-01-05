@@ -2,7 +2,9 @@ package com.ordep.syncotable.controller;
 
 import com.ordep.syncotable.dto.user.UserDto;
 import com.ordep.syncotable.dto.user.request.UpdateUserRequest;
+import com.ordep.syncotable.model.AuditLog;
 import com.ordep.syncotable.model.User;
+import com.ordep.syncotable.service.audit.AuditLogService;
 import com.ordep.syncotable.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     private final UserService userService;
+    private final AuditLogService auditLogService;
 
     @GetMapping("/users")
     public String userPage(Model model) {
@@ -24,6 +27,13 @@ public class AdminController {
         model.addAttribute("users", userService.findAllUsers());
 
         return "admin/users";
+    }
+
+    @GetMapping("/audit")
+    public String logPage(Model model) {
+        model.addAttribute("log", new AuditLog());
+        model.addAttribute("logs", auditLogService.findAllAuditLogs());
+        return "admin/audit";
     }
 
     @PostMapping("/users")
