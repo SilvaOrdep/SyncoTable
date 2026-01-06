@@ -39,7 +39,7 @@ public class XlsxWriter implements SpreadsheetWriter {
                 Row row = sheet.createRow(rowIndex++);
 
                 int colIndex = 0;
-                for (Object value : cardRow.getValuesJson().values()) {
+                for (Object value : cardRow.getValuesJson(). values()) {
                     Cell cell = row.createCell(colIndex++);
                     cell.setCellValue(value != null ? value.toString() : "");
                 }

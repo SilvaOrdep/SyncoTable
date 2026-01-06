@@ -17,20 +17,16 @@ import java.util.List;
 public class AuditLogService {
     private final AuditLogRepository logs;
     private final AuditLogMapper logMapper;
-    private final UserRepository users;
 
-    public AuditLogResponse createAuditLog(String entityType, Long entityId, String action, User user){
+    public AuditLogResponse createAuditLog(String entityType, String action, User user){
         AuditLog auditLog = new AuditLog();
         auditLog.setEntityType(entityType);
-        auditLog.setEntityId(entityId);
         auditLog.setAction(action);
         auditLog.setUser(user);
-
         return logMapper.toResponse(logs.save(auditLog));
     }
 
     public List<AuditLogResponse> findAllAuditLogs(){
-        System.out.println("RESPOSTA: "+logs.findAll().stream().map(logMapper::toResponse).toList());
-        return logs.findAll().stream().map(logMapper::toResponse).toList();
+               return logs.findAll().stream().map(logMapper::toResponse).toList();
     }
 }

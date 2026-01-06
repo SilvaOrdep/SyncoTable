@@ -97,7 +97,7 @@ public class CardService {
         card.setTitle(title);
         card.setDescription(description);
         card.setCreatedBy(user);
-        logService.createAuditLog("Card", card.getId(), "Criou um card", user);
+        logService.createAuditLog("Card", "Criou um card", user);
         return cardMapper.toResponse(cards.save(card));
     }
 
