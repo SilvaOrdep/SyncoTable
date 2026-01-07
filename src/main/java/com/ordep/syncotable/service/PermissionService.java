@@ -27,7 +27,6 @@ public class PermissionService {
     private final CardColumnRepository columns;
     private final PermissionMapper permissionMapper;
     private final PermissionColumnMapper permissionColumnMapper;
-    private final RoleRepository roles;
 
     public PermissionMatrixResponse createPermission(Long userId, Long cardId, PermissionUpdateRequest permissionUpdateRequest) {
         User user = users.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
@@ -46,8 +45,8 @@ public class PermissionService {
 
         for (CardColumn column : columns.findByCard(card)) {
             permissionColumns.save(PermissionColumn.builder()
-                    .canView(true)
-                    .canEdit(true)
+                    .canView(saved.isCanView())
+                    .canEdit(saved.isCanEdit())
                     .permission(saved)
                     .cardColumn(column)
                     .build()
