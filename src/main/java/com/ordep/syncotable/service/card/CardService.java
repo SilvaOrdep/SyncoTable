@@ -1,10 +1,10 @@
 package com.ordep.syncotable.service.card;
 
-import com.ordep.syncotable.dto.audit.response.AuditLogResponse;
 import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.column.response.CardColumnResponse;
 import com.ordep.syncotable.dto.row.request.CreateRowRequest;
+import com.ordep.syncotable.dto.row.request.RowUnitUpdate;
 import com.ordep.syncotable.dto.row.request.UpdateRowRequest;
 import com.ordep.syncotable.dto.row.response.RowResponse;
 import com.ordep.syncotable.mapper.CardColumnMapper;
@@ -170,6 +170,19 @@ public class CardService {
         cardRow.setUpdatedAt(Instant.now());
         cardRow.setVersion(cardRow.getVersion() + 1);
         return rowMapper.toResponse(rows.save(cardRow));
+    }
+
+    @Transactional
+    public void updateInBatch(List<RowUnitUpdate> rowUnitUpdateList) {
+
+        for (RowUnitUpdate rowUnitUpdate : rowUnitUpdateList) {
+            updateRow(new UpdateRowRequest(
+                    rowUnitUpdate.rowId(),
+                    rowUnitUpdate.version(),
+                    Map.of(rowUnitUpdate.columnKey(), rowUnitUpdate.newValue()))
+            );
+        }
+
     }
 
     @Transactional

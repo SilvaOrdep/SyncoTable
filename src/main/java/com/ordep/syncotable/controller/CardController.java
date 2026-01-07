@@ -3,18 +3,13 @@ package com.ordep.syncotable.controller;
 import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.permission.response.PermissionMatrixResponse;
-import com.ordep.syncotable.dto.row.request.BatchDeleteRowsRequest;
-import com.ordep.syncotable.dto.row.request.CreateRowRequest;
-import com.ordep.syncotable.dto.row.request.UpdateRowRequest;
+import com.ordep.syncotable.dto.row.request.*;
 import com.ordep.syncotable.dto.row.response.RowResponse;
-import com.ordep.syncotable.model.Card;
 import com.ordep.syncotable.model.User;
 import com.ordep.syncotable.service.PermissionService;
 import com.ordep.syncotable.service.card.CardService;
 import com.ordep.syncotable.service.user.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +19,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.util.List;
 
 @Controller
 @RequestMapping("/card")
@@ -73,6 +68,13 @@ public class CardController {
     @PostMapping("/{id}/row/update")
     public String updateRow(@PathVariable Long id, @RequestBody UpdateRowRequest updateRowRequest) {
         cardService.updateRow(updateRowRequest);
+
+        return "redirect:/card/" + id;
+    }
+
+    @PostMapping("/{id}/row/batch-edit")
+    public String updateRowsInBatch(@PathVariable Long id, @RequestBody List<RowUnitUpdate> rowUnitUpdateList) {
+        cardService.updateInBatch(rowUnitUpdateList);
 
         return "redirect:/card/" + id;
     }
