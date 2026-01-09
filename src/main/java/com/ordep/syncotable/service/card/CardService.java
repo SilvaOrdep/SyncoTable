@@ -232,7 +232,7 @@ public class CardService {
                 .collect(Collectors.toList());
     }
 
-    private Card findCardById(Long id) {
+    protected Card findCardById(Long id) {
         return cards.findById(id).orElseThrow(() -> new EntityNotFoundException("Card not found"));
     }
 
