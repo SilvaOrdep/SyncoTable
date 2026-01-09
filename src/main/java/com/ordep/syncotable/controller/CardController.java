@@ -52,8 +52,9 @@ public class CardController {
     }
 
     @DeleteMapping("/{id}")
-    public String deleteCard(@PathVariable Long id) {
-        cardService.deleteCardById(id);
+    public String deleteCard(@PathVariable Long id, @RequestParam(required = true) Long userId) {
+        System.out.println("id do usuario no controller: " + userId);
+        cardService.deleteCardById(id, userId);
 
         return "redirect:/home";
     }
@@ -80,15 +81,15 @@ public class CardController {
     }
 
     @DeleteMapping("/{id}/row/{rowId}")
-    public String deleteRow(@PathVariable Long id, @PathVariable Long rowId) {
-        cardService.deleteRow(rowId);
+    public String deleteRow(@PathVariable Long id, @PathVariable Long rowId, @RequestParam(required = true) Long userId) {
+        cardService.deleteRow(rowId, userId);
 
         return "redirect:/card/" + id;
     }
 
     @PostMapping("/{id}/row/batch-delete")
     public String deleteRowsInBatch(@PathVariable Long id, @RequestBody BatchDeleteRowsRequest batchDeleteRowsRequest) {
-        cardService.deleteRowsInBatch(batchDeleteRowsRequest.rowIds());
+        cardService.deleteRowsInBatch(batchDeleteRowsRequest);
 
         return "redirect:/card/" + id;
     }

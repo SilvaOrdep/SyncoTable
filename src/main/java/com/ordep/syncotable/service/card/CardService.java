@@ -3,6 +3,7 @@ package com.ordep.syncotable.service.card;
 import com.ordep.syncotable.dto.card.request.UpdateCardRequest;
 import com.ordep.syncotable.dto.card.response.CardResponse;
 import com.ordep.syncotable.dto.column.response.CardColumnResponse;
+import com.ordep.syncotable.dto.row.request.BatchDeleteRowsRequest;
 import com.ordep.syncotable.dto.row.request.CreateRowRequest;
 import com.ordep.syncotable.dto.row.request.RowUnitUpdate;
 import com.ordep.syncotable.dto.row.request.UpdateRowRequest;
@@ -108,10 +109,13 @@ public class CardService {
         cardMapper.updateEntity(updateCardRequest, card);
 
         cards.save(card);
+        logService.createAuditLog("Card", "Atualizou o card: " + card.getTitle(),
+                users.findById(updateCardRequest.userId())
+                        .orElseThrow(() -> new EntityNotFoundException("Usuário não foi encontrado")));
     }
 
     @Transactional
-    public void createColumn(Card card, String key){
+    public void createColumn(Card card, String key) {
         CardColumn column = new CardColumn();
         column.setCard(card);
         column.setLabel(key.toUpperCase(Locale.ROOT));
@@ -131,7 +135,7 @@ public class CardService {
 
             permissionService.createPermission(userId, cardResponse.id(), null);
 
-            Map<String,Object> headers = cardRows.get(0).getValuesJson();
+            Map<String, Object> headers = cardRows.get(0).getValuesJson();
             for (String key : headers.keySet()) {
                 createColumn(card, key);
             }
@@ -150,11 +154,12 @@ public class CardService {
         return xlsxWriter.write(card);
     }
 
-      public RowResponse createRow(CreateRowRequest createRowRequest) {
+    public RowResponse createRow(CreateRowRequest createRowRequest) {
         Card card = findCardById(createRowRequest.cardId());
         User user = users.findById(createRowRequest.userId()).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
         CardRow row = CardRow.builder().status("ACTIVE").card(card).createdBy(user).valuesJson(createRowRequest.values()).version(0L).updatedAt(Instant.now()).build();
+        logService.createAuditLog("Linha", "Criou uma linha no card: " + card.getTitle(), user);
 
         return rowMapper.toResponse(rows.save(row));
     }
@@ -169,6 +174,11 @@ public class CardService {
 
         cardRow.setUpdatedAt(Instant.now());
         cardRow.setVersion(cardRow.getVersion() + 1);
+
+        logService.createAuditLog("Linha", "Atualizou uma linha no card: " +
+                        cardRow.getCard().getTitle(),
+                users.findById(updateRowRequest.userId())
+                        .orElseThrow(() -> new EntityNotFoundException("User not found")));
         return rowMapper.toResponse(rows.save(cardRow));
     }
 
@@ -179,6 +189,7 @@ public class CardService {
             updateRow(new UpdateRowRequest(
                     rowUnitUpdate.rowId(),
                     rowUnitUpdate.version(),
+                    rowUnitUpdate.userId(),
                     Map.of(rowUnitUpdate.columnKey(), rowUnitUpdate.newValue()))
             );
         }
@@ -186,18 +197,26 @@ public class CardService {
     }
 
     @Transactional
-    public void deleteCardById(Long id) {
+    public void deleteCardById(Long id, Long userId) {
         permissions.deleteByCard_Id(id);
 
         cards.deleteById(id);
+        System.out.println("id do usuario:" + userId);
+        logService.createAuditLog("Card", "Deletou um card",
+                users.findById(userId)
+                        .orElseThrow(() -> new EntityNotFoundException("User not found")));
     }
 
-    public void deleteRow(Long rowId) {
-        rows.deleteById(rowId);
+    public void deleteRow(Long rowId, Long userId) {
+        CardRow row = rows.findById(rowId).orElseThrow(() -> new EntityNotFoundException("Row not found"));
+        rows.delete(row);
+        logService.createAuditLog("Linha", "Deletou uma linha no card:" + row.getCard().getTitle(),
+                users.findById(userId)
+                        .orElseThrow(() -> new EntityNotFoundException("User not found")));
     }
 
-    public void deleteRowsInBatch(List<Long> rowsId) {
-        rows.deleteAllById(rowsId);
+    public void deleteRowsInBatch(BatchDeleteRowsRequest batchDeleteRowsRequest) {
+        batchDeleteRowsRequest.rowIds().forEach(r -> deleteRow(r, batchDeleteRowsRequest.userId()));
     }
 
     public List<CardResponse> getAccessibleCardsByUser(User user) {
