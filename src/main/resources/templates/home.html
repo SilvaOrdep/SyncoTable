@@ -111,6 +111,7 @@
                     th:method="delete"
                     class="m-0 card-action-delete-form"
                   >
+                    <input type="hidden" name="userId" />
                     <button
                       type="submit"
                       class="btn btn-sm btn-danger card-action-delete"
@@ -143,6 +144,7 @@
             <div class="modal-body">
               <div class="mb-3">
                 <label class="form-label">Título</label>
+                <input type="hidden" name="userId" />
                 <input
                   type="text"
                   name="title"
@@ -180,6 +182,7 @@
     <script th:inline="javascript">
       const cardsData = /*[[${cards}]]*/ [];
       const permissionsData = /*[[${permissions}]]*/ [];
+      window.userId = /*[[${userId}]]*/ null;
 
       window.permissionsByCard = Object.fromEntries(
         permissionsData.map((p) => [
@@ -265,26 +268,28 @@
 
         document.querySelectorAll(".card-action-edit").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          e.preventDefault();
+          e.stopPropagation();
 
-            const cardEl = e.target.closest("[data-card-id]");
-            const cardId = cardEl.getAttribute("data-card-id");
-            const cardTitle = cardEl.getAttribute("data-card-title") || "";
-            const cardDesc = cardEl.getAttribute("data-card-desc") || "";
+          const cardEl = e.target.closest("[data-card-id]");
+          const cardId = cardEl.getAttribute("data-card-id");
+          const cardTitle = cardEl.getAttribute("data-card-title") || "";
+          const cardDesc = cardEl.getAttribute("data-card-desc") || "";
 
-            editForm.setAttribute("action", `/card/${cardId}`);
-            editForm.querySelector('input[name="title"]').value = cardTitle;
-            editForm.querySelector('textarea[name="description"]').value =
-              cardDesc;
+          editForm.setAttribute("action", `/card/${cardId}`);
+          editForm.querySelector('input[name="title"]').value = cardTitle;
+          editForm.querySelector('textarea[name="description"]').value = cardDesc;
+          editForm.querySelector('input[name="userId"]').value = window.userId;
 
-            editModal.show();
-          });
+          editModal.show();
+        });
+
         });
 
         document
           .querySelectorAll(".card-action-delete-form")
           .forEach((form) => {
+            form.querySelector('input[name="userId"]').value = window.userId;
             form.addEventListener("click", (e) => {
               e.stopPropagation();
             });

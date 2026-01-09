@@ -144,6 +144,7 @@
                                 th:action="@{/card/{id}/row/{rowId}(id=${card.id()}, rowId=${row.id()})}"
                                 th:method="delete"
                         >
+                            <input type="hidden" name="userId" />
                             <button type="submit" class="btn btn-danger btn-delete">
                                 Deletar
                             </button>
@@ -170,7 +171,7 @@
             th:data-sort-by="${sortBy}"
             th:data-sort-direction="${sortDirection}"
             th:data-user-id="${userId}"
-            style="display: none"
+            style="display: none">
     </div>
 </main>
 
@@ -517,7 +518,7 @@
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({rowIds: selectedIds}),
+            body: JSON.stringify({rowIds: selectedIds, userId: parseInt(userId)}),
         })
             .then((response) => {
                 if (response.ok) {
@@ -685,6 +686,7 @@
                 body: JSON.stringify({
                     rowId: currentRowData.id,
                     version: currentRowData.version,
+                    userId: parseInt(userId),
                     values: values,
                 }),
             })
@@ -984,6 +986,7 @@
             rowId: parseInt(rowId),
             columnKey: batchState.selectedColumnKey,
             newValue: batchState.newValue,
+            userId: parseInt(userId),
             version: parseInt(
                 document.querySelector(`tr[data-row-id="${rowId}"]`)?.getAttribute(
                     "data-row-version"
