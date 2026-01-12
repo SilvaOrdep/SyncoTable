@@ -1,5 +1,6 @@
 package com.ordep.syncotable.service.card;
 
+import com.ordep.syncotable.dto.lock.response.LockStatusResponse;
 import com.ordep.syncotable.model.Card;
 import com.ordep.syncotable.model.User;
 import com.ordep.syncotable.repository.CardRepository;
@@ -27,13 +28,13 @@ public class CardLockService {
         Card card = cardService.findCardById(cardId);
         User user = users.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        if(isLockValid(card) && !card.getLockedBy().getId().equals(userId)) {
+        if (isLockValid(card) && !card.getLockedBy().getId().equals(userId)) {
             return false;
         }
 
         card.setLockedBy(user);
         card.setLockedAt(Instant.now());
-        Card saved = cards.save(card);
+        cards.save(card);
 
         return true;
     }
@@ -42,7 +43,7 @@ public class CardLockService {
     public boolean releaseLock(Long cardId, Long userId) {
         Card card = cardService.findCardById(cardId);
 
-        if(isLockValid(card) && card.getLockedBy().getId().equals(userId)) {
+        if (card.getLockedBy() != null && card.getLockedBy().getId().equals(userId)) {
             card.setLockedBy(null);
             card.setLockedAt(null);
             cards.save(card);
@@ -56,11 +57,19 @@ public class CardLockService {
     public void heartbeat(Long cardId, Long userId) {
         Card card = cardService.findCardById(cardId);
 
-        if(card.getLockedBy() != null && card.getLockedBy().getId().equals(userId)) {
+        if (card.getLockedBy() != null && card.getLockedBy().getId().equals(userId)) {
             card.setLockedAt(Instant.now());
             cards.save(card);
         }
+    }
 
+    public LockStatusResponse getLockStatus(Long cardId, Long userId) {
+        Card card = cardService.findCardById(cardId);
+        boolean locked = isLockValid(card);
+        String lockedBy = locked ? card.getLockedBy().getUsername() : null;
+        boolean canEdit = !locked || (card.getLockedBy() != null && card.getLockedBy().getId().equals(userId));
+
+        return new LockStatusResponse(locked, lockedBy, card.getLockedAt(), canEdit);
     }
 
     public String getLockedByUsername(Long cardId) {
@@ -73,14 +82,14 @@ public class CardLockService {
         return null;
     }
 
-    public boolean canEditCard(Long cardId, User user) {
+    public boolean canUserEdit(Long cardId, Long userId) {
         Card card = cardService.findCardById(cardId);
 
         if (!isLockValid(card)) {
             return true;
         }
 
-        return card.getLockedBy().getId().equals(user.getId());
+        return card.getLockedBy() != null && card.getLockedBy().getId().equals(userId);
     }
 
     @Scheduled(fixedDelay = 300000)
@@ -95,20 +104,12 @@ public class CardLockService {
                 });
     }
 
-    private boolean isLocked(Long cardId) {
-        Card card = cardService.findCardById(cardId);
-
-        return isLockValid(card);
-    }
-
-
     private boolean isLockValid(Card card) {
         if (card.getLockedBy() == null || card.getLockedAt() == null) {
             return false;
         }
-        
+
         Duration lockDuration = Duration.between(card.getLockedAt(), Instant.now());
         return lockDuration.toMinutes() < LOCK_TIMEOUT_MINUTES;
     }
-    
 }
