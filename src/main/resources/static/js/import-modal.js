@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Abrir seletor de arquivo
     browseFileLink.addEventListener("click", function (e) {
         e.preventDefault();
+        e.stopPropagation();
         fileInput.click();
     });
 
