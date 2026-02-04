@@ -12,6 +12,9 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("prodName")
     public String getProdName() {
+
+        if (prodName == null || prodName.isEmpty()) return "Synco Table";
+
         return prodName;
     }
 }
