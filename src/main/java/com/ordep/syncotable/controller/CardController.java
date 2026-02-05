@@ -111,15 +111,14 @@ public class CardController {
 
     @DeleteMapping("/{id}/row/{rowId}")
     @ResponseBody
-    public ResponseEntity<?> deleteRow(@PathVariable Long id, @PathVariable Long rowId,
-            @RequestParam(required = true) Long userId, Authentication authentication) {
+    public ResponseEntity<?> deleteRow(@PathVariable Long id, @PathVariable Long rowId, Authentication authentication) {
         User user = userService.findUserByEmail(authentication.getName());
 
         if (!lockService.canUserEdit(id, user.getId())) {
             return ResponseEntity.status(HttpStatus.LOCKED).body("Card está sendo editado por outro usuário");
         }
 
-        cardService.deleteRow(rowId, userId);
+        cardService.deleteRow(rowId, user.getId());
         return ResponseEntity.ok().build();
     }
 

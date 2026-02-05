@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -145,15 +145,7 @@
               <td>
                 <div class="btn-group btn-group-sm">
                   <button class="btn btn-primary btn-edit">Editar</button>
-                  <form
-                    th:action="@{/card/{id}/row/{rowId}(id=${card.id()}, rowId=${row.id()})}"
-                    th:method="delete"
-                  >
-                    <input type="hidden" name="userId" />
-                    <button type="submit" class="btn btn-danger btn-delete">
-                      Deletar
-                    </button>
-                  </form>
+                  <button class="btn btn-danger btn-delete">Deletar</button>
                 </div>
               </td>
             </tr>
@@ -400,7 +392,7 @@
 
       function initPagination() {
         const totalRows = document.querySelectorAll(
-          "tbody tr:not(:has(td:only-child))"
+          "tbody tr:not(:has(td:only-child))",
         ).length;
         paginationState.totalRows = totalRows;
         paginationState.currentPage = 1;
@@ -410,7 +402,7 @@
       function renderPagination() {
         paginationContainer.innerHTML = "";
         const totalPages = Math.ceil(
-          paginationState.totalRows / paginationState.perPage
+          paginationState.totalRows / paginationState.perPage,
         );
 
         if (totalPages <= 1) return;
@@ -471,7 +463,7 @@
 
       function updateTableDisplay() {
         const rows = Array.from(
-          document.querySelectorAll("tbody tr:not(:has(td:only-child))")
+          document.querySelectorAll("tbody tr:not(:has(td:only-child))"),
         );
         const start =
           (paginationState.currentPage - 1) * paginationState.perPage;
@@ -487,6 +479,8 @@
         });
         updateDeleteButton();
         updateEditButton();
+        attachEditListeners();
+        attachDeleteListeners();
       }
 
       selectPerPage.addEventListener("change", (e) => {
@@ -514,7 +508,7 @@
           (paginationState.currentPage - 1) * paginationState.perPage;
         const end = start + paginationState.perPage;
         const rows = Array.from(
-          document.querySelectorAll("tbody tr:not(:has(td:only-child))")
+          document.querySelectorAll("tbody tr:not(:has(td:only-child))"),
         );
 
         rows.forEach((row, idx) => {
@@ -528,14 +522,14 @@
 
       function updateEditButton() {
         const checkedCount = document.querySelectorAll(
-          ".checkbox-row:checked"
+          ".checkbox-row:checked",
         ).length;
         btnEditSelected.disabled = checkedCount === 0;
       }
 
       function updateDeleteButton() {
         const checkedCount = document.querySelectorAll(
-          ".checkbox-row:checked"
+          ".checkbox-row:checked",
         ).length;
         btnDeleteSelected.disabled = checkedCount === 0;
       }
@@ -547,7 +541,7 @@
 
       btnDeleteSelected.addEventListener("click", () => {
         const selectedIds = Array.from(
-          document.querySelectorAll(".checkbox-row:checked")
+          document.querySelectorAll(".checkbox-row:checked"),
         ).map((cb) => cb.value);
 
         if (selectedIds.length === 0) {
@@ -633,6 +627,63 @@
 
       attachEditListeners();
 
+      function attachDeleteListeners() {
+        document.querySelectorAll(".btn-delete").forEach((btn) => {
+          btn.removeEventListener("click", handleDeleteRowClick);
+          btn.addEventListener("click", handleDeleteRowClick);
+        });
+      }
+
+      async function handleDeleteRowClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const button = e.target;
+
+        if (button.hasAttribute("disabled")) {
+          alert("Você não tem permissão para deletar linhas");
+          return;
+        }
+
+        if (!lockAcquired) {
+          alert("Você não tem permissão para editar este card");
+          return;
+        }
+
+        const row = button.closest("tr");
+        const rowId = row.getAttribute("data-row-id");
+
+        if (!confirm("Deseja deletar esta linha?")) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`/card/${cardId}/row/${rowId}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          if (response.status === 423) {
+            alert("Card está sendo editado por outro usuário");
+            disableEditing();
+            return;
+          }
+
+          if (response.ok) {
+            row.remove();
+            initPagination();
+            updateTableDisplay();
+          } else {
+            alert("Erro ao deletar linha");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Erro ao deletar linha");
+        }
+      }
+
+      attachDeleteListeners();
+
       function applyColumnPermissions() {
         if (!cardPermission) return;
 
@@ -651,7 +702,7 @@
           const canView = !ov || ov.canView;
 
           const headerEl = document.querySelector(
-            `th.sortable[data-column-key="${col.key}"]`
+            `th.sortable[data-column-key="${col.key}"]`,
           );
           if (headerEl) headerEl.style.display = canView ? "" : "none";
 
@@ -683,6 +734,20 @@
           document
             .querySelectorAll(".btn-edit")
             .forEach((b) => b.toggleAttribute("disabled", true));
+        } else {
+          document
+            .querySelectorAll(".btn-edit")
+            .forEach((b) => b.removeAttribute("disabled"));
+        }
+
+        if (!canDelete) {
+          document
+            .querySelectorAll(".btn-delete")
+            .forEach((b) => b.toggleAttribute("disabled", true));
+        } else {
+          document
+            .querySelectorAll(".btn-delete")
+            .forEach((b) => b.removeAttribute("disabled"));
         }
       }
 
@@ -840,7 +905,7 @@
 
       // ========== BATCH EDIT FUNCTIONALITY ==========
       const batchEditModal = new bootstrap.Modal(
-        document.getElementById("batchEditModal")
+        document.getElementById("batchEditModal"),
       );
       let batchState = {
         selectedRowIds: [],
@@ -855,7 +920,7 @@
         .getElementById("btnEditSelected")
         .addEventListener("click", () => {
           const checkedIds = Array.from(
-            document.querySelectorAll(".checkbox-row:checked")
+            document.querySelectorAll(".checkbox-row:checked"),
           ).map((cb) => cb.value);
 
           if (checkedIds.length === 0) {
@@ -983,13 +1048,13 @@
 
         batchState.selectedRowIds.forEach((rowId) => {
           const row = document.querySelector(
-            `tbody tr[data-row-id="${rowId}"]`
+            `tbody tr[data-row-id="${rowId}"]`,
           );
 
           if (row) {
             // Find the cell with the matching column
             const columnIndex = columns.findIndex(
-              (c) => c.key === batchState.selectedColumnKey
+              (c) => c.key === batchState.selectedColumnKey,
             );
 
             if (columnIndex >= 0) {
@@ -1069,7 +1134,7 @@
 
         if (
           !confirm(
-            `Deseja aplicar esta mudança em ${batchState.selectedRowIds.length} linha(s)?`
+            `Deseja aplicar esta mudança em ${batchState.selectedRowIds.length} linha(s)?`,
           )
         ) {
           return;
@@ -1087,7 +1152,7 @@
           version: parseInt(
             document
               .querySelector(`tr[data-row-id="${rowId}"]`)
-              ?.getAttribute("data-row-version") || 0
+              ?.getAttribute("data-row-version") || 0,
           ),
         }));
 
@@ -1141,7 +1206,7 @@
 
           if (!lockStatus.canEdit) {
             alert(
-              `Este card está sendo editado por ${lockStatus.lockedByUsername}`
+              `Este card está sendo editado por ${lockStatus.lockedByUsername}`,
             );
             disableEditing();
             return;
@@ -1236,7 +1301,7 @@
         }
 
         const selectedIds = Array.from(
-          document.querySelectorAll(".checkbox-row:checked")
+          document.querySelectorAll(".checkbox-row:checked"),
         ).map((cb) => cb.value);
 
         if (selectedIds.length === 0) {
@@ -1290,7 +1355,7 @@
           version: parseInt(
             document
               .querySelector(`tr[data-row-id="${rowId}"]`)
-              ?.getAttribute("data-row-version") || 0
+              ?.getAttribute("data-row-version") || 0,
           ),
         }));
 
