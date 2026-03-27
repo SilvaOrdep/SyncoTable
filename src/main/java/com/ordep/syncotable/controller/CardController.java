@@ -138,8 +138,8 @@ public class CardController {
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String importCard(@RequestParam("file") MultipartFile multipartFile,
-            @RequestParam(required = true) Long userId) {
-        CardResponse card = cardService.importSpreadsheet(multipartFile, userId);
+            @RequestParam(required = true) Long userId, @RequestParam(required = true) String cardTitle) {
+        CardResponse card = cardService.importSpreadsheet(multipartFile, userId, cardTitle);
 
         return "redirect:/card/" + card.id();
     }
