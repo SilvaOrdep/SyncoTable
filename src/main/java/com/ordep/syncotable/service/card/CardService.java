@@ -125,12 +125,15 @@ public class CardService {
     }
 
     @Transactional
-    public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId) {
+    public CardResponse importSpreadsheet(MultipartFile multipartFile, Long userId, String cardTitle) {
         String filename = multipartFile.getOriginalFilename();
+        if(cardTitle.isEmpty()){
+            cardTitle = filename;
+        }
         SpreadsheetReader sheet = spreadsheetReaderFactory.getReader(filename);
         try (InputStream is = multipartFile.getInputStream()) {
             List<CardRow> cardRows = sheet.read(is);
-            CardResponse cardResponse = createCard(filename, "Adicione uma descrição", userId);
+            CardResponse cardResponse = createCard(cardTitle, "Adicione uma descrição", userId);
             Card card = findCardById(cardResponse.id());
 
             permissionService.createPermission(userId, cardResponse.id(), null);
